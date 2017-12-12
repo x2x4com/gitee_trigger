@@ -60,9 +60,9 @@ def update_json():
     :return:
     """
     password = request.args.get('auth')
-    if request.method == 'POST' and password in password_dict:
+    if request.method == 'POST':
         content = request.get_json(force=True)
-        print(content)
+        print(sorted(content))
         return [200, content, "demo"]
     return "hello"
 
