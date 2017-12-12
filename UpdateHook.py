@@ -30,7 +30,7 @@ import subprocess
 import shlex
 import datetime
 import time
-import MyLog as log
+import lib.MyLog as log
 
 
 app = Flask(__name__)
