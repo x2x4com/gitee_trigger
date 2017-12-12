@@ -27,7 +27,7 @@ app = Flask(__name__)
 listen = '0.0.0.0'
 port = 10080
 processes = 4
-debug = False
+debug = True
 
 password_dict = [
     'Ck-_DevzEAB6Yiy2',
