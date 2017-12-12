@@ -54,6 +54,13 @@ repos = {
             "branch": "master",
         },
     },
+    "artwook": {
+        "www": {
+            "password": "kTGphGkKPRWxy6xwNXBs",
+            "local_dir": "/data/site/www",
+            "branch": "master",
+        },
+    },
 }
 
 # 输出规范
