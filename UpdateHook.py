@@ -60,9 +60,12 @@ def update_json():
 
     :return:
     """
-    password = request.args.get('auth')
+    #password = request.args.get('auth')
     if request.method == 'POST':
         content = request.get_json(force=True)
+        password = content['password']
+        if password not in password_dict:
+            return [400, "", "Access Deny"]
         print(json.dumps(content))
         return [200, content, "demo"]
     return "hello"
