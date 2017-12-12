@@ -26,6 +26,11 @@ import json
 from flask import Response
 from collections import OrderedDict
 from configparser import ConfigParser
+import subprocess
+import shlex
+import datetime
+import time
+import MyLog as log
 
 
 app = Flask(__name__)
@@ -52,12 +57,13 @@ repos = {
 }
 
 # 输出规范
-
 stand = OrderedDict()
 stand['ret'] = 200
 stand['data'] = None
 stand['msg'] = None
 
+# 日志输出
+log.set_logger(filename="/tmp/" + __name__ + ".log", level='INFO', console=False)
 
 def json_output():
     def decorate(func):
@@ -86,6 +92,52 @@ def json_output():
             return Response(result, mimetype='application/json')
         return wrapper
     return decorate
+
+
+class ShellExeTimeout(Exception):
+    def __init__(self, value):
+        self.value = value
+
+    def __str__(self):
+        return repr(self.value)
+
+
+def exec_shell(cmd, cwd=None, timeout=None, shell=False):
+    """
+        封装一个执行shell的方法
+        封装了subprocess的Popen方法，支持超时判断，支持读取stdout和stderr
+        参数：
+            cwd: 运行路径，如果被设定，子进程会切换到cwd
+            timeout: 超时时间， 秒， 支持小数，精度0.1秒
+            shell: 是否通过shell运行
+        返回： [return_code(int),'stdout(file handle)','stderr(file handle)']
+        Raises: ShellExeTimeout: 执行超时
+        在外部捕捉此错误
+        注意：如果命令带有管道，必须用shell=True
+
+    :param cmd:  string, 执行的命令
+    :param cwd:  string, 运行路径，如果被设定，子进程会切换到cwd
+    :param timeout:  float, 超时时间， 秒， 支持小数，精度0.1秒
+    :param shell:  bool, 是否通过shell运行
+    :return:  list, [return_code(int),'stdout(file handle)','stderr(file handle)']
+    :raise ShellExeTimeout: 运行超时
+    """
+    try:
+        if shell:
+            cmd_list = cmd
+        else:
+            cmd_list = shlex.split(cmd)
+        if timeout:
+            end_time = datetime.datetime.now() + datetime.timedelta(seconds=timeout)
+        sub = subprocess.Popen(cmd_list, cwd=cwd, stdin=subprocess.PIPE, shell=shell, bufsize=4096,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+        while sub.poll() is None:
+            time.sleep(0.1)
+            if timeout:
+                if end_time < datetime.datetime.now():
+                    raise ShellExeTimeout("Shell Run Timeout(%s sec): %s" % (timeout,cmd))
+        return [int(sub.returncode),sub.stdout,sub.stderr]
+    except OSError as e:
+        return [1,[],[e]]
 
 
 @app.route("/")
@@ -137,18 +189,29 @@ def run(namespace, name, url):
     # try to get config
     try:
         repo_root = repos[namespace][name]['local_dir']
-        repo_url = url
     except KeyError as e:
-        return [400, "", "config key error, %s" % e]
+        msg = "config key error, %s" % e
+        log.error(msg)
+        return [400, "", msg]
     try:
         branch = repos[namespace][name]['branch']
     except KeyError:
         branch = "master"
     if not is_existed(repo_root):
-        return [400, "", "local repo not existed"]
+        msg = "local repo not existed"
+        log.error(msg)
+        return [400, "", msg]
     local_config_repo_url = get_local_repo_url(repo_root, branch)
     if local_config_repo_url not in url:
-        return [400, "", "%s not in %s" % (local_config_repo_url, url)]
+        msg = "%s not in %s" % (local_config_repo_url, url)
+        log.error(msg)
+        return [400, "", msg]
+    cmd = "git pull"
+    stats = exec_shell(cmd, repo_root, 60, True)
+    if stats[0] != 0:
+        msg = "code: %s, stdout: %s, stderr: %s" % (stats[0], stats[1].read(), stats[2].read())
+        log.error(msg)
+        return [400, "", msg]
     return [200, "data", "msg"]
 
 
@@ -161,7 +224,7 @@ def get_local_repo_url(repo, branch):
     config.read(repo + '/.git/config')
     try:
         remote = config['branch "'+branch+'"']['remote']
-        url = config['remote "'+remote+'"']['url'] + "1111"
+        url = config['remote "'+remote+'"']['url']
     except KeyError as e:
         url = "Git config parser error, %s" % e
     return url
