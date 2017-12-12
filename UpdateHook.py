@@ -41,15 +41,15 @@ processes = 4
 debug = True
 
 token_list = [
-    'emdsinM7cgn9a8mMzxDY',
-    'odA9ukoy96wKu5UGg5f5'
+    'HNhJB3JawJ52JqrxKotu',
+    'Bwbpyd39jXHm5DCXun4Z'
 ]
 
 # namespace: { "name": { xxxx } }
 repos = {
     "ninechain": {
         "UpdateHook": {
-            "password": "Ck-_DevzEAB6Yiy2",
+            "password": "eMmvz7NjfznwGgXHaj2z",
             "local_dir": "/home/runner/UpdateHook",
             "branch": "master",
         },
