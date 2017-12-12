@@ -20,8 +20,12 @@
 # ===============================================================================
 
 from flask import Flask, request
-from JsonFormat import json_output
+from os import path
+from functools import wraps
 import json
+from flask import Response
+from collections import OrderedDict
+
 
 app = Flask(__name__)
 
@@ -38,14 +42,49 @@ password_dict = [
 # namespace: { "name": { xxxx } }
 repos = {
     "ninechain": {
-        "name": {
-            "ssh_url": "git@gitee.com:ninechain/UpdateHook.git",
-            "http_url": None,
+        "UpdateHook": {
+            "password": "",
             "local_dir": "/home/runner/UpdateHook",
             "branch": "master",
         },
     },
 }
+
+# 输出规范
+
+stand = OrderedDict()
+stand['ret'] = 200
+stand['data'] = None
+stand['msg'] = None
+
+
+def json_output():
+    def decorate(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            result = func(*args, **kwargs)
+            if type(result) == list:
+                try:
+                    stand['ret'] = int(result[0])
+                except IndexError:
+                    stand['ret'] = 500
+                    stand['data'] = None
+                    stand['msg'] = "return String error"
+                    return json.dumps(stand)
+                try:
+                    stand['data'] = result[1]
+                except IndexError:
+                    pass
+                try:
+                    stand['msg'] = result[2]
+                except IndexError:
+                    pass
+            else:
+                stand['data'] = result
+            result = json.dumps(stand)
+            return Response(result, mimetype='application/json')
+        return wrapper
+    return decorate
 
 
 @app.route("/")
@@ -67,7 +106,7 @@ def update_json():
 
     :return:
     """
-    #password = request.args.get('auth')
+    # password = request.args.get('token')
     if request.method == 'POST':
         content = request.get_json(force=True)
         password = content['password']
@@ -80,7 +119,7 @@ def update_json():
     return "hello"
 
 
-@app.route("/oschina/update", methods=['GET','POST'])
+@app.route("/oschina/update", methods=['GET', 'POST'])
 def update_form():
     return "form"
 
@@ -97,15 +136,23 @@ def run(namespace, name, url):
     # try to get config
     try:
         repo_root = repos[namespace][name]['local_dir']
+        repo_url = url
     except KeyError as e:
         return [400, "", "config key error, %s" % e]
+    if not is_existed(repo_root):
+        return [400, "", "local repo not existed"]
+    local_config_repo_url = get_local_repo_url(repo_root)
 
     return [200, "data", "msg"]
 
 
+def is_existed(repo):
+    return path.exists(repo)
 
-def is_match_repo_url(url, ssh_url, http_url):
+
+def get_local_repo_url(repo_root):
     pass
+
 
 def check_git_dir(target):
     pass
