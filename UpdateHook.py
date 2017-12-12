@@ -161,7 +161,7 @@ def get_local_repo_url(repo, branch):
     config.read(repo + '/.git/config')
     try:
         remote = config['branch "'+branch+'"']['remote']
-        url = config['remote "'+remote+'"']['url']
+        url = config['remote "'+remote+'"']['url'] + "1111"
     except KeyError as e:
         url = "Git config parser error, %s" % e
     return url
