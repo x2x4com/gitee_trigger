@@ -21,6 +21,7 @@
 
 from flask import Flask, request
 from JsonFormat import output
+import json
 
 app = Flask(__name__)
 
@@ -62,7 +63,7 @@ def update_json():
     password = request.args.get('auth')
     if request.method == 'POST':
         content = request.get_json(force=True)
-        print(content)
+        print(json.dumps(content))
         return [200, content, "demo"]
     return "hello"
 
