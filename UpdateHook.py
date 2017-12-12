@@ -214,7 +214,7 @@ def run(namespace, name, url):
         return [400, "", msg]
     msg = "CMD: %s, return %s, stdout %s" % (cmd, stats[0], stats[1].read())
     log.info(msg)
-    return [200, "ok", msg]
+    return [200, msg, ""]
 
 
 def is_existed(repo):
