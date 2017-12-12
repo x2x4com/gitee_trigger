@@ -212,7 +212,9 @@ def run(namespace, name, url):
         msg = "code: %s, stdout: %s, stderr: %s" % (stats[0], stats[1].read(), stats[2].read())
         log.error(msg)
         return [400, "", msg]
-    return [200, "data", "msg"]
+    msg = "CMD: %s, return %s, stdout %s" % (cmd, stats[0], stats[1].read())
+    log.info(msg)
+    return [200, "ok", msg]
 
 
 def is_existed(repo):
