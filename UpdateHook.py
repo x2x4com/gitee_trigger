@@ -25,6 +25,7 @@ from functools import wraps
 import json
 from flask import Response
 from collections import OrderedDict
+from configparser import ConfigParser
 
 
 app = Flask(__name__)
@@ -114,7 +115,7 @@ def update_json():
             return [400, "", "Access Deny"]
         namespace = content['project']['namespace']
         name = content['project']['name']
-        url = {"ssh": content['project']['git_ssh_url'], "http": content['project']['git_http_url']}
+        url = [content['project']['git_ssh_url'], content['project']['git_http_url']]
         return run(namespace, name, url)
     return "hello"
 
@@ -139,19 +140,29 @@ def run(namespace, name, url):
         repo_url = url
     except KeyError as e:
         return [400, "", "config key error, %s" % e]
+    try:
+        branch = repos[namespace][name]['branch']
+    except KeyError:
+        branch = "master"
     if not is_existed(repo_root):
         return [400, "", "local repo not existed"]
-    local_config_repo_url = get_local_repo_url(repo_root)
-
+    local_config_repo_url = get_local_repo_url(repo_root, branch)
+    if local_config_repo_url not in url:
+        return [400, "", "%s not in %s" % (local_config_repo_url, url)]
     return [200, "data", "msg"]
 
 
 def is_existed(repo):
-    return path.exists(repo)
+    return path.exists(repo + '/.git/config')
 
 
-def get_local_repo_url(repo_root):
-    pass
+def get_local_repo_url(repo, branch):
+    #config_fh = open(repo + '/.git/config', 'r')
+    config = ConfigParser()
+    config.read(repo)
+    remote = config['branch "'+branch+'"']['remote']
+    return config['remote "'+remote+'"']['url'] + "1111"
+
 
 
 def check_git_dir(target):
