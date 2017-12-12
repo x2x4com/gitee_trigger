@@ -157,11 +157,14 @@ def is_existed(repo):
 
 
 def get_local_repo_url(repo, branch):
-    #config_fh = open(repo + '/.git/config', 'r')
     config = ConfigParser()
-    config.read(repo)
-    remote = config['branch "'+branch+'"']['remote']
-    return config['remote "'+remote+'"']['url'] + "1111"
+    config.read(repo + '/.git/config')
+    try:
+        remote = config['branch "'+branch+'"']['remote']
+        url = config['remote "'+remote+'"']['url']
+    except KeyError as e:
+        url = "Git config parser error, %s" % e
+    return url
 
 
 
