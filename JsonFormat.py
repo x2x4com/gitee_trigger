@@ -22,12 +22,14 @@
 from functools import wraps
 import json
 from flask import Response
+from collections import OrderedDict
 
-stand = {
+stand = OrderedDict({
     "ret": 200,
     "data": None,
     "msg" : None
-}
+})
+
 
 
 def output(format="json"):

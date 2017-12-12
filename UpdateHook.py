@@ -62,7 +62,8 @@ def update_json():
     password = request.args.get('auth')
     if request.method == 'POST' and password in password_dict:
         content = request.get_json(force=True)
-
+        print(content)
+        return [200, content, "demo"]
     return "hello"
 
 
