@@ -35,19 +35,16 @@ password_dict = [
     'x2x4x2x4x2x4'
 ]
 
+# namespace: { "name": { xxxx } }
 repos = {
-    """
-    namespace: { "name": { xxxx } }
-    
-    """
     "ninechain": {
-        "name" : {
+        "name": {
             "ssh_url": "git@gitee.com:ninechain/UpdateHook.git",
             "http_url": None,
             "local_dir": "/home/runner/UpdateHook",
             "branch": "master",
-        }
-    }
+        },
+    },
 }
 
 
@@ -101,7 +98,7 @@ def run(namespace, name, url):
     try:
         repo_root = repos[namespace][name]['local_dir']
     except KeyError as e:
-        return [400, "", "config error %s" % e]
+        return [400, "", "config key error, %s" % e]
 
     return [200, "data", "msg"]
 
