@@ -30,7 +30,7 @@ stand['data'] = None
 stand['msg'] = None
 
 
-def output(format="json"):
+def json_output():
     def decorate(func):
         @wraps(func)
         def wrapper(*args, **kwargs):

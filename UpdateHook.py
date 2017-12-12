@@ -20,7 +20,7 @@
 # ===============================================================================
 
 from flask import Flask, request
-from JsonFormat import output
+from JsonFormat import json_output
 import json
 
 app = Flask(__name__)
@@ -35,14 +35,24 @@ password_dict = [
     'x2x4x2x4x2x4'
 ]
 
-git_config = {
-    "name": "",
-    "root": ""
+repos = {
+    """
+    namespace: { "name": { xxxx } }
+    
+    """
+    "ninechain": {
+        "name" : {
+            "ssh_url": "git@gitee.com:ninechain/UpdateHook.git",
+            "http_url": None,
+            "local_dir": "/home/runner/UpdateHook",
+            "branch": "master",
+        }
+    }
 }
 
 
 @app.route("/")
-@output(format="json")
+@json_output()
 def index():
     """
     default router
@@ -53,7 +63,7 @@ def index():
 
 
 @app.route("/oschina/update.json", methods=['GET', 'POST'])
-@output(format="json")
+@json_output()
 def update_json():
     """
     post data with json format
@@ -66,8 +76,10 @@ def update_json():
         password = content['password']
         if password not in password_dict:
             return [400, "", "Access Deny"]
-        print(json.dumps(content))
-        return [200, content, "demo"]
+        namespace = content['project']['namespace']
+        name = content['project']['name']
+        url = {"ssh": content['project']['git_ssh_url'], "http": content['project']['git_http_url']}
+        return run(namespace, name, url)
     return "hello"
 
 
@@ -76,13 +88,27 @@ def update_form():
     return "form"
 
 
-def do():
+def run(namespace, name, url):
     """
+    run 开始执行操作
 
-    :return:
+    :param namespace: string, 项目的命名空间
+    :param name: string, 项目名称
+    :param url: dict, ssh和http的repo url
+    :return: list, [ code, data, msg ]
     """
+    # try to get config
+    try:
+        repo_root = repos[namespace][name]['local_dir']
+    except KeyError as e:
+        return [400, "", "config error %s" % e]
+
+    return [200, "data", "msg"]
+
+
+
+def is_match_repo_url(url, ssh_url, http_url):
     pass
-
 
 def check_git_dir(target):
     pass
