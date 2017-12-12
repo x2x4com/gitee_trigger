@@ -24,12 +24,10 @@ import json
 from flask import Response
 from collections import OrderedDict
 
-stand = OrderedDict({
-    "ret": 200,
-    "data": None,
-    "msg" : None
-})
-
+stand = OrderedDict()
+stand['ret'] = 200
+stand['data'] = None
+stand['msg'] = None
 
 
 def output(format="json"):
