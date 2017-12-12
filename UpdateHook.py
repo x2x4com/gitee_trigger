@@ -40,16 +40,16 @@ port = 10080
 processes = 4
 debug = True
 
-password_dict = [
-    'Ck-_DevzEAB6Yiy2',
-    'x2x4x2x4x2x4'
+token_list = [
+    'emdsinM7cgn9a8mMzxDY',
+    'odA9ukoy96wKu5UGg5f5'
 ]
 
 # namespace: { "name": { xxxx } }
 repos = {
     "ninechain": {
         "UpdateHook": {
-            "password": "",
+            "password": "Ck-_DevzEAB6Yiy2",
             "local_dir": "/home/runner/UpdateHook",
             "branch": "master",
         },
@@ -159,16 +159,18 @@ def update_json():
 
     :return:
     """
-    # password = request.args.get('token')
+    #
     if request.method == 'POST':
         content = request.get_json(force=True)
-        password = content['password']
-        if password not in password_dict:
-            return [400, "", "Access Deny"]
+
+        token = request.args.get('token')
+        if token not in token_list:
+            return [400, "", "Access deny, token failed"]
         namespace = content['project']['namespace']
         name = content['project']['name']
         url = [content['project']['git_ssh_url'], content['project']['git_http_url']]
-        return run(namespace, name, url)
+        password = content['password']
+        return run(namespace, name, url, password)
     return "hello"
 
 
@@ -177,16 +179,25 @@ def update_form():
     return "form"
 
 
-def run(namespace, name, url):
+def run(namespace, name, url, password):
     """
     run 开始执行操作
 
     :param namespace: string, 项目的命名空间
     :param name: string, 项目名称
     :param url: dict, ssh和http的repo url
+    :param password: string, 更新秘钥
     :return: list, [ code, data, msg ]
     """
     # try to get config
+    try:
+        local_pass = repos[namespace][name]['password']
+    except KeyError:
+        local_pass = None
+    if local_pass != password:
+        msg = "password error"
+        log.error(msg)
+        return [400, "", msg]
     try:
         repo_root = repos[namespace][name]['local_dir']
     except KeyError as e:
