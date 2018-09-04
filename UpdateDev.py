@@ -166,6 +166,7 @@ def update_json():
 @app.route('/jenkins/callback', methods=['GET'])
 def jenkins_callback():
     # only allow from jenkins server
+    print(request.remote_addr)
     return "done"
 
 
