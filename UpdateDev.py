@@ -275,11 +275,16 @@ def run(content):
                                                         cause_msg)
         print(request_url)
         ret = requests.get(request_url, auth=(jenkins_user, jenkins_secret))
-        print(ret.text)
+        # print(ret.text)
+        location = ret.headers['location']
+        print('location: %s' % location )
+        print('get task info')
+        task = requests.get(location + 'api/json', auth=(jenkins_user, jenkins_secret))
+        print(task.json())
     elif len(existed_at_users) > 0:
         print('不构建，就通知一下')
         notify_dingding(msg, existed_at_user_mobiles)
-    
+
     return [200, 'run', ""]
 
 
