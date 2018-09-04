@@ -255,7 +255,7 @@ def run(content):
     jenkins_user = jenkins['user']
     jenkins_secret = jenkins['secret']
 
-    msg = '%s在分支%s上提交了代码%s\n提交信息%s\n开始向Jenkins提交构建请求' % (gitee_user, ref, git_hash, message)
+    msg = '%s在分支%s上提交了代码%s\n提交信息%s\n' % (gitee_user, ref, git_hash, message)
     existed_at_user_mobiles = list()
     for existed_at_user in existed_at_users:
         existed_at_user_mobile = '@' + str(git_user[existed_at_user])
@@ -263,7 +263,7 @@ def run(content):
         existed_at_user_mobiles.append(existed_at_user_mobile)
 
     if is_build:
-        msg = '收到了构建请求!!\n' + msg
+        msg = '收到了构建请求!!\n' + msg + '开始向Jenkins提交构建请求\n'
         print('msg: %s' % msg)
         notify_dingding(msg, existed_at_user_mobiles)
         cause_msg = '%s+build' % git_hash
