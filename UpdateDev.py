@@ -230,7 +230,7 @@ def run(content):
         if str(want_at_user) in git_user.keys():
             existed_at_users.append(str(want_at_user))
     print('at users: %s' % existed_at_users)
-    # 找所有的#CMD
+    # 找所有的 CMD
     is_deploy = False
     is_build = False
     print('Search for cmd')
