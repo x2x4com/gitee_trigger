@@ -219,6 +219,7 @@ def run(content):
     gitee_user = content['user_name']
     msg = '测试at, @' + git_user[gitee_user] + ' 在分支' + ref + '提交了代码 ' + git_hash
     notify_dingding(msg, [git_user[gitee_user]])
+    
     return [200, 'run', ""]
 
 
