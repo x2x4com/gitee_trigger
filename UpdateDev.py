@@ -217,8 +217,13 @@ def run(content):
     head_commit = content['head_commit']
     git_hash = content['after']
     gitee_user = content['user_name']
-    msg = '测试at, @' + str(git_user[gitee_user]) + ' 在分支' + ref + '提交了代码 ' + git_hash
-    notify_dingding(msg, [git_user[gitee_user]])
+    gitee_user_mobile = git_user.get(git_user, None)
+    if gitee_user_mobile is not None:
+        msg = '测试at, @' + str(git_user[gitee_user]) + ' 在分支' + ref + '提交了代码 ' + git_hash
+        notify_dingding(msg, [git_user[gitee_user]])
+    else:
+        msg = '测试at, @' + str(gitee_user) + ' 在分支' + ref + '提交了代码 ' + git_hash
+        notify_dingding(msg)
     return [200, 'run', ""]
 
 
