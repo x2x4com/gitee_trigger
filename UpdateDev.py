@@ -210,6 +210,8 @@ def run(content):
         return [403, '', 'authorization failure']
     if hook_name not in ['push_hooks']:
         return [400, '', 'hook not support']
+    # ref 必须为 refs/heads/dev
+    ref = content['ref']
     pusher = content['pusher']
     head_commit = content['head_commit']
     git_hash = content['after']
