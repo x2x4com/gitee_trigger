@@ -268,6 +268,7 @@ def run(content):
                                                         project['jenkins_url'],
                                                         project['jenkins_token'],
                                                         cause_msg)
+        print(request_url)
         ret = requests.get(request_url, auth=(jenkins_user, jenkins_secret))
         print(ret.text)
 
