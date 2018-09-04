@@ -212,12 +212,12 @@ def run(content):
     if hook_name not in ['push_hooks']:
         return [400, '', 'hook not support']
     # ref 必须为 refs/heads/dev
-    ref = content['ref']
+    ref = content['ref'].split('/')[-1]
     pusher = content['pusher']
     head_commit = content['head_commit']
     git_hash = content['after']
     gitee_user = content['user_name']
-    msg = '测试at, @' + git_user[gitee_user] + ' 提交了代码 ' + git_hash
+    msg = '测试at, @' + git_user[gitee_user] + ' 在分支' + ref + '提交了代码 ' + git_hash
     notify_dingding(msg, [git_user[gitee_user]])
     return [200, 'run', ""]
 
