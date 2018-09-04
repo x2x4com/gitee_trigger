@@ -265,7 +265,7 @@ def run(content):
         notify_dingding(msg, existed_at_user_mobiles)
         cause_msg = '%s+build' % git_hash
         if is_deploy:
-            cause_msg = cause_msg + '+deploy'
+            cause_msg = cause_msg + '_deploy'
         request_url = '%s%s/build?token=%s&cause=%s' % (jenkins_hosts,
                                                         project['jenkins_url'],
                                                         project['jenkins_token'],
