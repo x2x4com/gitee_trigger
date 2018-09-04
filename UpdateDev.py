@@ -210,9 +210,14 @@ def run(content):
     if password != project['password']:
         return [403, '', 'authorization failure']
     if hook_name not in ['push_hooks']:
-        return [400, '', 'hook not support']
-    # ref 必须为 refs/heads/dev
+        return [400, '', 'hook %s, not support' % hook_name]
+    # ref 必须为 配置文件中指定的，否则跳出
     ref = content['ref'].split('/')[-1]
+    if ref not in project['branch']:
+        return [400, '', 'branch %s, not support' % ref]
+    # 开始正式干活儿, 搜索commit 信息
+    
+
     pusher = content['pusher']
     head_commit = content['head_commit']
     git_hash = content['after']
@@ -222,7 +227,7 @@ def run(content):
         msg = '测试at, @' + str(gitee_user_mobile) + ' 在分支' + ref + '提交了代码 ' + git_hash
         notify_dingding(msg, [gitee_user_mobile])
     else:
-        msg = '测试at, @' + str(gitee_user) + ' 在分支' + ref + '提交了代码 ' + git_hash
+        msg = '测试at, ' + str(gitee_user) + ' 在分支' + ref + '提交了代码 ' + git_hash
         notify_dingding(msg)
 
     return [200, 'run', ""]
