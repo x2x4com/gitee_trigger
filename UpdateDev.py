@@ -275,7 +275,7 @@ def run(content):
                                                         cause_msg)
         print(request_url)
         ret = requests.get(request_url, auth=(jenkins_user, jenkins_secret))
-        # print(ret.text) 
+        # print(ret.text)
         location = ret.headers['location']
         print('location: %s' % location )
         print('get task info')
