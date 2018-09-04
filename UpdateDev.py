@@ -31,10 +31,7 @@ import shlex
 import datetime
 import time
 import lib.MyLog as log
-try:
-    from cfg import repos, token_list
-except ImportError:
-    raise SystemExit('No cfg.py find')
+from cfg import jenkins, token_list, dd_9chain_tech_robot
 
 
 app = Flask(__name__)
