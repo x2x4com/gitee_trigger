@@ -163,7 +163,7 @@ def update_json():
     return "hello"
 
 
-@app.route('/jenkins/callback', method=['GET'])
+@app.route('/jenkins/callback', methods=['GET'])
 def jenkins_callback():
     return "done"
 
@@ -261,7 +261,6 @@ def run(content):
                                                         cause_msg)
         ret = requests.get(request_url, auth=(jenkins_user, jenkins_secret))
         print(ret.text)
-
 
     return [200, 'run', ""]
 
