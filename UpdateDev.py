@@ -228,6 +228,7 @@ def run(content):
     existed_at_users = list()
     # 看看@的对象有没有对应dingding手机号码
     for want_at_user in want_at_users:
+        want_at_user = want_at_user.lstrip('@')
         if str(want_at_user) in git_user.keys():
             existed_at_users.append(str(want_at_user))
     print('at users: %s' % existed_at_users)
