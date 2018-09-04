@@ -224,6 +224,7 @@ def run(content):
     print('Search for at')
     re_at = re.compile(r'@[^@\s]+')
     want_at_users = re_at.findall(message)
+    print(want_at_users)
     existed_at_users = list()
     # 看看@的对象有没有对应dingding手机号码
     for want_at_user in want_at_users:
