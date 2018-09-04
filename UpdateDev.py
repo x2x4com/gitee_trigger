@@ -178,42 +178,8 @@ def run(namespace, name, url, password):
     :return: list, [ code, data, msg ]
     """
     # try to get config
-    try:
-        local_pass = repos[namespace][name]['password']
-    except KeyError:
-        local_pass = None
-    if local_pass != password:
-        msg = "password error"
-        log.error(msg)
-        return [400, "", msg]
-    try:
-        repo_root = repos[namespace][name]['local_dir']
-    except KeyError as e:
-        msg = "config key error, %s" % e
-        log.error(msg)
-        return [400, "", msg]
-    try:
-        branch = repos[namespace][name]['branch']
-    except KeyError:
-        branch = "master"
-    if not is_existed(repo_root):
-        msg = "local repo not existed"
-        log.error(msg)
-        return [400, "", msg]
-    local_config_repo_url = get_local_repo_url(repo_root, branch)
-    if local_config_repo_url not in url:
-        msg = "%s not in %s" % (local_config_repo_url, url)
-        log.error(msg)
-        return [400, "", msg]
-    cmd = "git pull"
-    stats = exec_shell(cmd, repo_root, 60, True)
-    if stats[0] != 0:
-        msg = "code: %s, stdout: %s, stderr: %s" % (stats[0], stats[1].read(), stats[2].read())
-        log.error(msg)
-        return [400, "", msg]
-    msg = "CMD: %s, return %s, stdout %s" % (cmd, stats[0], stats[1].read())
-    log.info(msg)
-    return [200, msg, ""]
+
+    return [200, 'run', ""]
 
 
 def is_existed(repo):
@@ -237,4 +203,4 @@ def check_git_dir(target):
 
 
 if __name__ == '__main__':
-    app.run(host=listen, port=port, processes=processes, debug=debug)
+    app.run(host=listen, port=port, debug=debug)
