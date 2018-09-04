@@ -204,19 +204,24 @@ def run(content):
     try:
         project = jenkins['repos'][namespace][name]
     except Exception:
+        print('target not find')
         return [400, '', 'target not find']
     if password != project['password']:
+        print('authorization failure')
         return [403, '', 'authorization failure']
     if hook_name not in ['push_hooks']:
+        print('hook %s, not support' % hook_name)
         return [400, '', 'hook %s, not support' % hook_name]
     # ref 必须为 配置文件中指定的，否则跳出
     ref = content['ref'].split('/')[-1]
     if ref not in project['branch']:
+        print('branch %s, not support' % ref)
         return [400, '', 'branch %s, not support' % ref]
     # 开始正式干活儿, 搜索commit 信息
     head_commit = content['head_commit']
     message = head_commit['message']
     # 找所有@的对象
+    print('Search for at')
     re_at = re.compile(r'@[^@\s]+')
     want_at_users = re_at.findall(message)
     existed_at_users = list()
@@ -227,6 +232,7 @@ def run(content):
     # 找所有的#CMD
     is_deploy = False
     is_build = False
+    print('Search for cmd')
     re_cmd = re.compile(r'#CMD:(build(?:\+deploy)?)')
     cmds = re_cmd.findall(message)
     for cmd in cmds:
@@ -235,6 +241,8 @@ def run(content):
             is_deploy = True
         if cmd == 'build':
             is_build = True
+    print('isBuild: %s' % is_build)
+    print('isDeploy: %s' % is_deploy)
 
     pusher = content['pusher']
     git_hash = content['after']
@@ -246,6 +254,7 @@ def run(content):
 
     if is_build:
         msg = '收到了构建请求!!\n%s在分支%s上提交了代码%s\n提交信息%s\n开始向Jenkins提交构建请求' % (gitee_user, ref, git_hash, message)
+        print('msg: %s' % msg)
         existed_at_user_mobiles = list()
         for existed_at_user in existed_at_users:
             existed_at_user_mobile = '@' + str(git_user[existed_at_user])
