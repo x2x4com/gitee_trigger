@@ -39,6 +39,7 @@ except ImportError:
 
 app = Flask(__name__)
 
+
 listen = '0.0.0.0'
 port = 10080
 processes = 4
@@ -155,6 +156,7 @@ def update_json():
         token = request.args.get('token')
         if token not in token_list:
             return [400, "", "Access deny, token failed"]
+        print(content)
         namespace = content['project']['namespace']
         name = content['project']['name']
         url = [content['project']['git_ssh_url'], content['project']['git_http_url']]
