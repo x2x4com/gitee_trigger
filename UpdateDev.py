@@ -220,7 +220,7 @@ def run(content):
     # 开始正式干活儿, 搜索commit 信息
     head_commit = content['head_commit']
     message = head_commit['message']
-    # 找所有@的对象
+    # 找所有at的对象
     print('Search for at')
     re_at = re.compile(r'@[^@\s]+')
     want_at_users = re_at.findall(message)
