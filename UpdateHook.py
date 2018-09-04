@@ -148,7 +148,6 @@ def update_json():
 
     :return:
     """
-    #
     if request.method == 'POST':
         content = request.get_json(force=True)
 
