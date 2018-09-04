@@ -188,6 +188,7 @@ def notify_dingding(msg, at_user:list=None):
         print('%s 发送成功' % msg)
     else:
         print('%s 发送失败' % msg)
+    print(ret.text)
 
 
 def run(content):
