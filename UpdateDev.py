@@ -78,7 +78,7 @@ def json_output():
             else:
                 stand['data'] = result
             result = json.dumps(stand)
-            return Response(result, mimetype='application/json')
+            return Response(result, mimetype='application/json', status=stand['ret'])
         return wrapper
     return decorate
 
