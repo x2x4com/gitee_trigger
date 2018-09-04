@@ -31,7 +31,8 @@ import shlex
 import datetime
 import time
 import lib.MyLog as log
-from cfg import jenkins, token_list, dd_9chain_tech_robot
+import requests
+from cfg import jenkins, token_list, dd_9chain_tech_robot, git_user
 
 
 app = Flask(__name__)
@@ -87,6 +88,11 @@ class ShellExeTimeout(Exception):
 
     def __str__(self):
         return repr(self.value)
+
+
+class DictToObj(object):
+    def __init__(self, _dict:dict):
+        self.__dict__.update(_dict)
 
 
 def exec_shell(cmd, cwd=None, timeout=None, shell=False):
@@ -153,12 +159,7 @@ def update_json():
         token = request.args.get('token')
         if token not in token_list:
             return [400, "", "Access deny, token failed"]
-        print(content)
-        namespace = content['project']['namespace']
-        name = content['project']['name']
-        url = [content['project']['git_ssh_url'], content['project']['git_http_url']]
-        password = content['password']
-        return run(namespace, name, url, password)
+        return run(content)
     return "hello"
 
 
@@ -167,18 +168,54 @@ def update_form():
     return "form"
 
 
-def run(namespace, name, url, password):
+def notify_dingding(msg, at_user:list=None):
+    data = {
+        "msgtype": "text",
+        "text": {
+            "content": str(msg)
+        },
+
+    }
+    if at_user is not None and type(at_user) == list:
+        at_mobiles = list()
+        for user in at_user:
+            at_mobiles.append(user)
+        data['at'] = dict()
+        data['at']['atMobiles'] = at_mobiles
+        data['at']['isAtAll'] = False
+    ret = requests.post(dd_9chain_tech_robot, json=data)
+    if ret.status_code == requests.codes.ok:
+        print('%s 发送成功' % msg)
+    else:
+        print('%s 发送失败' % msg)
+
+
+def run(content):
     """
     run 开始执行操作
 
-    :param namespace: string, 项目的命名空间
-    :param name: string, 项目名称
-    :param url: dict, ssh和http的repo url
-    :param password: string, 更新秘钥
+    :param content: string, 回调结构
     :return: list, [ code, data, msg ]
     """
     # try to get config
-
+    namespace = content['project']['namespace']
+    name = content['project']['name']
+    password = content['password']
+    hook_name = content['hook_name']
+    try:
+        project = jenkins['repos'][namespace][name]
+    except Exception:
+        return [400, '', 'target not find']
+    if password != project['password']:
+        return [403, '', 'authorization failure']
+    if hook_name not in ['push_hooks']:
+        return [400, '', 'hook not support']
+    pusher = content['pusher']
+    head_commit = content['head_commit']
+    git_hash = content['after']
+    gitee_user = content['user_name']
+    msg = '测试at, @' + git_user[gitee_user] + ' 提交了代码 ' + git_hash
+    notify_dingding(msg, [git_user[gitee_user]])
     return [200, 'run', ""]
 
 
