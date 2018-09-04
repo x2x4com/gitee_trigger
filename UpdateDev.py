@@ -33,7 +33,7 @@ import time
 import lib.MyLog as log
 import requests
 from cfg import jenkins, token_list, dd_9chain_tech_robot, git_user
-
+import re
 
 app = Flask(__name__)
 
@@ -163,12 +163,12 @@ def update_json():
     return "hello"
 
 
-@app.route("/oschina/update", methods=['GET', 'POST'])
-def update_form():
-    return "form"
+@app.route('/jenkins/callback', method=['GET'])
+def jenkins_callback():
+    return "done"
 
 
-def notify_dingding(msg, at_user:list=None):
+def notify_dingding(msg, at_mobiles:list=None):
     data = {
         "msgtype": "text",
         "text": {
@@ -176,13 +176,11 @@ def notify_dingding(msg, at_user:list=None):
         },
 
     }
-    if at_user is not None and type(at_user) == list:
-        at_mobiles = list()
-        for user in at_user:
-            at_mobiles.append(user)
-        data['at'] = dict()
-        data['at']['atMobiles'] = at_mobiles
-        data['at']['isAtAll'] = False
+    if at_mobiles is not None and type(at_mobiles) == list:
+        if len(at_mobiles) > 0:
+            data['at'] = dict()
+            data['at']['atMobiles'] = at_mobiles
+            data['at']['isAtAll'] = False
     ret = requests.post(dd_9chain_tech_robot, json=data)
     if ret.status_code == requests.codes.ok:
         print('%s 发送成功' % msg)
@@ -216,19 +214,54 @@ def run(content):
     if ref not in project['branch']:
         return [400, '', 'branch %s, not support' % ref]
     # 开始正式干活儿, 搜索commit 信息
-    
+    head_commit = content['head_commit']
+    message = head_commit['message']
+    # 找所有@的对象
+    re_at = re.compile(r'@[^@\s]+')
+    want_at_users = re_at.findall(message)
+    existed_at_users = list()
+    # 看看@的对象有没有对应dingding手机号码
+    for want_at_user in want_at_users:
+        if str(want_at_user) in git_user.keys():
+            existed_at_users.append(str(want_at_user))
+    # 找所有的#CMD
+    is_deploy = False
+    is_build = False
+    re_cmd = re.compile(r'#CMD:(build(?:\+deploy)?)')
+    cmds = re_cmd.findall(message)
+    for cmd in cmds:
+        if cmd == 'build+deploy':
+            is_build = True
+            is_deploy = True
+        if cmd == 'build':
+            is_build = True
 
     pusher = content['pusher']
-    head_commit = content['head_commit']
     git_hash = content['after']
     gitee_user = content['user_name']
-    gitee_user_mobile = git_user.get(gitee_user, None)
-    if gitee_user_mobile is not None:
-        msg = '测试at, @' + str(gitee_user_mobile) + ' 在分支' + ref + '提交了代码 ' + git_hash
-        notify_dingding(msg, [gitee_user_mobile])
-    else:
-        msg = '测试at, ' + str(gitee_user) + ' 在分支' + ref + '提交了代码 ' + git_hash
-        notify_dingding(msg)
+
+    jenkins_hosts = jenkins['host']
+    jenkins_user = jenkins['user']
+    jenkins_secret = jenkins['secret']
+
+    if is_build:
+        msg = '收到了构建请求!!\n%s在分支%s上提交了代码%s\n提交信息%s\n开始向Jenkins提交构建请求' % (gitee_user, ref, git_hash, message)
+        existed_at_user_mobiles = list()
+        for existed_at_user in existed_at_users:
+            existed_at_user_mobile = '@' + str(git_user[existed_at_user])
+            msg.replace(existed_at_user, existed_at_user_mobile)
+            existed_at_user_mobiles.append(existed_at_user_mobile)
+        notify_dingding(msg, existed_at_user_mobiles)
+        cause_msg = '%s+build' % git_hash
+        if is_deploy:
+            cause_msg = cause_msg + '+deploy'
+        request_url = '%s%s/build?token=%s&cause=%s' % (jenkins_hosts,
+                                                        project['jenkins_url'],
+                                                        project['jenkins_token'],
+                                                        cause_msg)
+        ret = requests.get(request_url, auth=(jenkins_user, jenkins_secret))
+        print(ret.text)
+
 
     return [200, 'run', ""]
 
