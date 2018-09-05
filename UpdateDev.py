@@ -291,7 +291,7 @@ def run(content):
             request_url = '%s%s/build?token=%s&IS_DEPLOY=true' % (jenkins_hosts,
                                                                 project['jenkins_url'],
                                                                 project['jenkins_token'],
-                                                                        )
+                                                                    )
         else:
             request_url = '%s%s/build?token=%s&cause=%s' % (jenkins_hosts,
                                                         project['jenkins_url'],
