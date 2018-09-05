@@ -308,7 +308,7 @@ def run(content):
         print(request_url)
         ret = requests.get(request_url, auth=(jenkins_user, jenkins_secret))
         print(ret.status_code)
-        if ret.status_code == requests.codes.ok:
+        if ret.status_code == 303:
             location = ret.headers['location']
             print('location: %s' % location )
             print('get task info')
