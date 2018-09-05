@@ -288,24 +288,28 @@ def run(content):
         cause_msg = '%s+build' % git_hash
         if is_deploy:
             cause_msg = cause_msg + '_deploy'
-            request_url = '%s%s/buildWithParameters?token=%s&IS_DEPLOY=true&cause=%s' % (jenkins_hosts,
+            request_url = '%s%s/buildWithParameters?token=%s&is_deploy=true&cause=%s' % (jenkins_hosts,
                                                                 project['jenkins_url'],
                                                                 project['jenkins_token'],
                                                                 cause_msg)
         else:
-            request_url = '%s%s/buildWithParameters?token=%s&IS_DEPLOY=false&cause=%s' % (jenkins_hosts,
+            request_url = '%s%s/buildWithParameters?token=%s&is_deploy=false&cause=%s' % (jenkins_hosts,
                                                         project['jenkins_url'],
                                                         project['jenkins_token'],
                                                         cause_msg)
-            
+
         print(request_url)
         ret = requests.get(request_url, auth=(jenkins_user, jenkins_secret))
-        print(ret.text)
-        location = ret.headers['location']
-        print('location: %s' % location )
-        print('get task info')
-        task = requests.get(location + 'api/json', auth=(jenkins_user, jenkins_secret))
-        print(task.json())
+        # print(ret.text)
+        if ret.status_code == requests.codes.ok:
+            location = ret.headers['location']
+            print('location: %s' % location )
+            print('get task info')
+            task = requests.get(location + 'api/json', auth=(jenkins_user, jenkins_secret))
+            print(task.json())
+        else:
+            print('requests not ok')
+            print(ret.text)
     elif len(existed_at_users) > 0:
         print('不构建，就通知一下')
         notify_dingding(msg, existed_at_user_mobiles)
