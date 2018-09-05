@@ -188,6 +188,9 @@ def jenkins_callback():
     is_deploy = request.args.get('is_deploy')
     job_name = request.args.get('job_name')
     build_tag = request.args.get('build_tag')
+    print(is_deploy, commit_hash, job_name, build_tag)
+    if is_deploy == 'true':
+        pass
     return "done"
 
 
