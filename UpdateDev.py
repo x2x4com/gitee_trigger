@@ -230,7 +230,7 @@ def run(content):
         project = jenkins['repos'][namespace][name]
     except Exception:
         print('target not find')
-        return [400, '', 'target not find']
+        return [400, '', 'target not find, %s/%s' %(namespace, name)]
     if project['password'] not in global_password:
         print('authorization failure')
         return [403, '', 'authorization failure']
