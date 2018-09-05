@@ -307,7 +307,7 @@ def run(content):
 
         print(request_url)
         ret = requests.get(request_url, auth=(jenkins_user, jenkins_secret))
-        # print(ret.text)
+        print(ret.status_code)
         if ret.status_code == requests.codes.ok:
             location = ret.headers['location']
             print('location: %s' % location )
