@@ -288,7 +288,7 @@ def run(content):
         cause_msg = '%s+build' % git_hash
         if is_deploy:
             cause_msg = cause_msg + '_deploy'
-            request_url = '%s%s/build?token=%s&cause=%s&isDeploy=true' % (jenkins_hosts,
+            request_url = '%s%s/build?token=%s&isDeploy=true&cause=%s' % (jenkins_hosts,
                                                                         project['jenkins_url'],
                                                                         project['jenkins_token'],
                                                                         cause_msg)
