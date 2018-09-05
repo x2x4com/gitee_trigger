@@ -189,7 +189,7 @@ def jenkins_callback():
     job_name = request.args.get('job_name')
     build_tag = request.args.get('build_tag')
     print(is_deploy, commit_hash, job_name, build_tag)
-    msg = "%s:%s 已经构建完成, 构建TAG: %s" % (job_name, commit_hash, build_tag)
+    msg = "{job_name}:{commit_hash} 已经构建完成, 构建TAG: {build_tag}\n镜像地址: 192.168.1.234:5000/{job_name}:{commit_hash}".format(job_name=job_name, commit_hash=commit_hash, build_tag=build_tag)
     if is_deploy == 'true':
         msg = msg + "\n开始部署测试环境"
     notify_dingding(msg)
