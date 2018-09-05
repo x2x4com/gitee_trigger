@@ -308,7 +308,6 @@ def run(content):
     elif len(existed_at_users) > 0:
         print('不构建，就通知一下')
         notify_dingding(msg, existed_at_user_mobiles)
-
     return [200, 'run', ""]
 
 
