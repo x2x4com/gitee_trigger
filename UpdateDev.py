@@ -32,7 +32,7 @@ import datetime
 import time
 import lib.MyLog as log
 import requests
-from cfg import jenkins, token_list, dd_9chain_tech_robot, git_user
+from cfg import jenkins, token_list, dd_9chain_tech_robot, git_user, global_password
 import re
 from functools import reduce
 
@@ -225,14 +225,13 @@ def run(content):
     # try to get config
     namespace = content['project']['namespace']
     name = content['project']['name']
-    password = content['password']
     hook_name = content['hook_name']
     try:
         project = jenkins['repos'][namespace][name]
     except Exception:
         print('target not find')
         return [400, '', 'target not find']
-    if password != project['password']:
+    if project['password'] not in global_password:
         print('authorization failure')
         return [403, '', 'authorization failure']
     if hook_name not in ['push_hooks']:
