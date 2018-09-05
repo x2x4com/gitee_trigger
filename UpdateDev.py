@@ -172,7 +172,7 @@ def update_json():
 
         token = request.args.get('token')
         if token not in token_list:
-            return [400, "", "Access deny, token failed"]
+            return [403, "", "Access deny, token failed"]
         return run(content)
     return "hello"
 
@@ -181,9 +181,13 @@ def update_json():
 @json_output()
 def jenkins_callback():
     # only allow from jenkins server
-    print(request.remote_addr)
-    if not is_internal_ip(request.remote_addr):
+    token = request.args.get('token')
+    if not is_internal_ip(request.remote_addr) or token not in token_list:
         return [403, '', 'Not allow']
+    commit_hash = request.args.get('commit_hash')
+    is_deploy = request.args.get('is_deploy')
+    job_name = request.args.get('job_name')
+    build_tag = request.args.get('build_tag')
     return "done"
 
 
