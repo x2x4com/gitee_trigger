@@ -190,7 +190,7 @@ def jenkins_callback():
     build_tag = request.args.get('build_tag')
     print(is_deploy, commit_hash, job_name, build_tag)
     if is_deploy == 'true':
-        pass
+        print("ok, let's deploy it")
     return "done"
 
 
@@ -308,7 +308,7 @@ def run(content):
         print(request_url)
         ret = requests.get(request_url, auth=(jenkins_user, jenkins_secret))
         print(ret.status_code)
-        if ret.status_code == 303:
+        if ret.status_code == 201:
             location = ret.headers['location']
             print('location: %s' % location )
             print('get task info')
