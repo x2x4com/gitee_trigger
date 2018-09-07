@@ -233,7 +233,7 @@ def run(content):
     except Exception:
         print('target not find, %s/%s' %(namespace, name))
         return [400, '', 'target not find, %s/%s' %(namespace, name)]
-    if project['password'] not in global_password:
+    if content['password'] not in global_password:
         print('authorization failure')
         return [403, '', 'authorization failure']
     if hook_name not in ['push_hooks']:
@@ -282,7 +282,7 @@ def run(content):
     jenkins_user = jenkins['user']
     jenkins_secret = jenkins['secret']
 
-    msg = '%s在分支%s上提交了代码%s\n提交信息%s\n' % (gitee_user, ref, git_hash, message)
+    msg = '%s在分支%s上提交了代码%s\n提交信息: %s\n' % (gitee_user, ref, git_hash, message)
     existed_at_user_mobiles = list()
     for existed_at_user in existed_at_users:
         existed_at_user_mobile = '@' + str(git_user[existed_at_user])
