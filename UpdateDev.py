@@ -315,8 +315,14 @@ def run(content):
             location = ret.headers['location']
             log.info('location: %s' % location )
             log.info('get task info')
-            task = requests.get(location + 'api/json', auth=(jenkins_user, jenkins_secret))
-            log.info(task.json())
+            try:
+                task = requests.get(location + 'api/json', auth=(jenkins_user, jenkins_secret), timeout=10)
+                if task.status_code != requests.codes.ok:
+                    log.info(task.json())
+                else:
+                    log.error(task.text())
+            except TimeoutError:
+                log.error('request timeout')
         else:
             log.info('requests not ok')
             log.info(ret.text)
