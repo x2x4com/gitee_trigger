@@ -188,8 +188,9 @@ def jenkins_callback():
     is_deploy = request.args.get('is_deploy')
     job_name = request.args.get('job_name')
     build_tag = request.args.get('build_tag')
-    print(is_deploy, commit_hash, job_name, build_tag)
+    # log.info(is_deploy, commit_hash, job_name, build_tag)
     msg = "{job_name}:{commit_hash} 已经构建完成, 构建TAG: {build_tag}\n镜像地址: 192.168.1.234:5000/{job_name}:{commit_hash}".format(job_name=job_name, commit_hash=commit_hash, build_tag=build_tag)
+    log.info(msg)
     if is_deploy == 'true':
         msg = msg + "\n开始部署测试环境"
     notify_dingding(msg)
@@ -211,10 +212,10 @@ def notify_dingding(msg, at_mobiles:list=None):
             data['at']['isAtAll'] = False
     ret = requests.post(dd_9chain_tech_robot, json=data)
     if ret.status_code == requests.codes.ok:
-        print('%s 发送成功' % msg)
+        log.info('%s 发送成功' % msg)
     else:
-        print('%s 发送失败' % msg)
-    print(ret.text)
+        log.info('%s 发送失败' % msg)
+    log.info(ret.text)
 
 
 def run(content):
@@ -231,24 +232,24 @@ def run(content):
     try:
         project = jenkins['repos'][namespace][name]
     except Exception:
-        print('target not find, %s/%s' %(namespace, name))
+        log.error('target not find, %s/%s' %(namespace, name))
         return [400, '', 'target not find, %s/%s' %(namespace, name)]
     if content['password'] not in global_password:
-        print('authorization failure')
+        log.error('authorization failure')
         return [403, '', 'authorization failure']
     if hook_name not in ['push_hooks']:
-        print('hook %s, not support' % hook_name)
+        log.error('hook %s, not support' % hook_name)
         return [400, '', 'hook %s, not support' % hook_name]
     # ref 必须为 配置文件中指定的，否则跳出
     ref = content['ref'].split('/')[-1]
     if ref not in project['branch']:
-        print('branch %s, not support' % ref)
+        log.error('branch %s, not support' % ref)
         return [400, '', 'branch %s, not support' % ref]
     # 开始正式干活儿, 搜索commit 信息
     head_commit = content['head_commit']
     message = head_commit['message']
     # 找所有at的对象
-    print('Search for at')
+    log.info('Search for at')
     re_at = re.compile(r'@[^@\s]+')
     want_at_users = re_at.findall(message)
     # print(want_at_users)
@@ -258,11 +259,11 @@ def run(content):
         want_at_user = want_at_user.lstrip('@')
         if str(want_at_user) in git_user.keys():
             existed_at_users.append(str(want_at_user))
-    print('at users: %s' % existed_at_users)
+    log.info('at users: %s' % existed_at_users)
     # 找所有的 CMD
     is_deploy = False
     is_build = False
-    print('Search for cmd')
+    log.info('Search for cmd')
     re_cmd = re.compile(r'#CMD:(build(?:\+deploy)?)')
     cmds = re_cmd.findall(message)
     for cmd in cmds:
@@ -271,8 +272,9 @@ def run(content):
             is_deploy = True
         if cmd == 'build':
             is_build = True
-    print('isBuild: %s' % is_build)
-    print('isDeploy: %s' % is_deploy)
+
+    log.info('isBuild: %s' % is_build)
+    log.info('isDeploy: %s' % is_deploy)
 
     pusher = content['pusher']
     git_hash = content['after']
@@ -291,7 +293,7 @@ def run(content):
 
     if is_build:
         msg = '收到了构建请求!!\n' + msg + '开始向Jenkins提交构建请求\n'
-        print('msg: %s' % msg)
+        log.info('msg: %s' % msg)
         notify_dingding(msg, existed_at_user_mobiles)
         cause_msg = '%s+build' % git_hash
         if is_deploy:
@@ -306,20 +308,20 @@ def run(content):
                                                         project['jenkins_token'],
                                                         cause_msg)
 
-        print(request_url)
+        log.info(request_url)
         ret = requests.get(request_url, auth=(jenkins_user, jenkins_secret))
-        print(ret.status_code)
+        log.info(ret.status_code)
         if ret.status_code == 201:
             location = ret.headers['location']
-            print('location: %s' % location )
-            print('get task info')
+            log.info('location: %s' % location )
+            log.info('get task info')
             task = requests.get(location + 'api/json', auth=(jenkins_user, jenkins_secret))
-            print(task.json())
+            log.info(task.json())
         else:
-            print('requests not ok')
-            print(ret.text)
+            log.info('requests not ok')
+            log.info(ret.text)
     elif len(existed_at_users) > 0:
-        print('不构建，就通知一下')
+        log.info('不构建，就通知一下')
         notify_dingding(msg, existed_at_user_mobiles)
     return [200, 'run', ""]
 
