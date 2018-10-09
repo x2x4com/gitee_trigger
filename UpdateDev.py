@@ -52,7 +52,7 @@ stand['data'] = None
 stand['msg'] = None
 
 # 日志输出
-log.set_logger(filename="/tmp/UpdateHook.log", level='INFO', console=False)
+log.set_logger(filename="/tmp/UpdateDev.log", level='INFO', console=True)
 
 def json_output():
     def decorate(func):
