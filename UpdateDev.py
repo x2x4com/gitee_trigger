@@ -226,7 +226,7 @@ def run(content):
     :return: list, [ code, data, msg ]
     """
     # try to get config
-    log.info(content)
+    # log.info(content)
     namespace = content['project']['namespace']
     name = content['project']['name']
     hook_name = content['hook_name']
