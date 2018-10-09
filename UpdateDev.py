@@ -230,6 +230,7 @@ def run(content):
     namespace = content['project']['namespace']
     name = content['project']['name']
     hook_name = content['hook_name']
+    log.info("%s/%s pushed" % (namespace, name))
     try:
         project = jenkins['repos'][namespace][name]
     except Exception:
@@ -243,12 +244,14 @@ def run(content):
         return [400, '', 'hook %s, not support' % hook_name]
     # ref 必须为 配置文件中指定的，否则跳出
     ref = content['ref'].split('/')[-1]
+    log.info('target %s/%s ,branch %s' % (namespace, name, ref))
     if ref not in project['branch']:
         log.error('target %s/%s ,branch %s, not support' % (namespace, name, ref))
         return [400, '', 'branch %s, not support' % ref]
     # 开始正式干活儿, 搜索commit 信息
     head_commit = content['head_commit']
     message = head_commit['message']
+    log.info("Commit Message: %s" % message)
     # 找所有at的对象
     log.info('Search for at')
     re_at = re.compile(r'@[^@\s]+')
