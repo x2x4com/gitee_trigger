@@ -226,6 +226,7 @@ def run(content):
     :return: list, [ code, data, msg ]
     """
     # try to get config
+    log.info(content)
     namespace = content['project']['namespace']
     name = content['project']['name']
     hook_name = content['hook_name']
@@ -243,7 +244,7 @@ def run(content):
     # ref 必须为 配置文件中指定的，否则跳出
     ref = content['ref'].split('/')[-1]
     if ref not in project['branch']:
-        log.error('branch %s, not support' % ref)
+        log.error('target %s/%s ,branch %s, not support' % (namespace, name, ref))
         return [400, '', 'branch %s, not support' % ref]
     # 开始正式干活儿, 搜索commit 信息
     head_commit = content['head_commit']
