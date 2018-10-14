@@ -35,6 +35,7 @@ import requests
 from cfg import jenkins, token_list, dd_9chain_tech_robot, git_user, global_password
 import re
 from functools import reduce
+from lib.Dingding import DRobot
 
 app = Flask(__name__)
 
@@ -54,12 +55,15 @@ stand['msg'] = None
 # 日志输出
 log.set_logger(filename="/tmp/UpdateDev.log", level='INFO', console=True)
 
+# 钉钉机器人
+dingding_robot = DRobot(dd_9chain_tech_robot)
+
 def json_output():
     def decorate(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
             result = func(*args, **kwargs)
-            if type(result) == list:
+            if type(result) == list or type(result) == tuple:
                 try:
                     stand['ret'] = int(result[0])
                 except IndexError:
@@ -83,56 +87,6 @@ def json_output():
     return decorate
 
 
-class ShellExeTimeout(Exception):
-    def __init__(self, value):
-        self.value = value
-
-    def __str__(self):
-        return repr(self.value)
-
-
-class DictToObj(object):
-    def __init__(self, _dict:dict):
-        self.__dict__.update(_dict)
-
-
-def exec_shell(cmd, cwd=None, timeout=None, shell=False):
-    """
-        封装一个执行shell的方法
-        封装了subprocess的Popen方法，支持超时判断，支持读取stdout和stderr
-        参数：
-            cwd: 运行路径，如果被设定，子进程会切换到cwd
-            timeout: 超时时间， 秒， 支持小数，精度0.1秒
-            shell: 是否通过shell运行
-        返回： [return_code(int),'stdout(file handle)','stderr(file handle)']
-        Raises: ShellExeTimeout: 执行超时
-        在外部捕捉此错误
-        注意：如果命令带有管道，必须用shell=True
-
-    :param cmd:  string, 执行的命令
-    :param cwd:  string, 运行路径，如果被设定，子进程会切换到cwd
-    :param timeout:  float, 超时时间， 秒， 支持小数，精度0.1秒
-    :param shell:  bool, 是否通过shell运行
-    :return:  list, [return_code(int),'stdout(file handle)','stderr(file handle)']
-    :raise ShellExeTimeout: 运行超时
-    """
-    try:
-        if shell:
-            cmd_list = cmd
-        else:
-            cmd_list = shlex.split(cmd)
-        if timeout:
-            end_time = datetime.datetime.now() + datetime.timedelta(seconds=timeout)
-        sub = subprocess.Popen(cmd_list, cwd=cwd, stdin=subprocess.PIPE, shell=shell, bufsize=4096,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-        while sub.poll() is None:
-            time.sleep(0.1)
-            if timeout:
-                if end_time < datetime.datetime.now():
-                    raise ShellExeTimeout("Shell Run Timeout(%s sec): %s" % (timeout,cmd))
-        return [int(sub.returncode),sub.stdout,sub.stderr]
-    except OSError as e:
-        return [1,[],[e]]
-
 
 def ip_into_int(ip):
     # 先把 192.168.1.13 变成16进制的 c0.a8.01.0d ，再去了“.”后转成10进制的 3232235789 即可。
@@ -148,7 +102,6 @@ def is_internal_ip(ip):
 
 
 @app.route("/")
-@json_output()
 def index():
     """
     default router
@@ -168,7 +121,7 @@ def update_json():
     """
     #
     if request.method == 'POST':
-        content = request.get_json(force=True)
+        content = request.get_json(force=True, silent=True, cache=False)
 
         token = request.args.get('token')
         if token not in token_list:
@@ -193,29 +146,42 @@ def jenkins_callback():
     log.info(msg)
     if is_deploy == 'true':
         msg = msg + "\n开始部署测试环境"
-    notify_dingding(msg)
-    return "done"
+    return dingding_robot.send_text(msg=msg)
 
 
-def notify_dingding(msg, at_mobiles:list=None):
-    data = {
-        "msgtype": "text",
-        "text": {
-            "content": str(msg)
-        },
+@app.route("/deploy/callback", methods=['POST', 'GET'])
+@json_output()
+def deploy_callback():
+    if not is_internal_ip(request.remote_addr):
+        return [403, '', 'Not allow']
+    if request.method == 'GET':
+        token = request.args.get('token')
+        if token not in token_list:
+            return [403, '', 'Not allow, Token failed']
+        commit_hash = request.args.get('commit_hash')
+        is_deploy = request.args.get('is_deploy')
+        job_name = request.args.get('job_name')
+        build_tag = request.args.get('build_tag')
+        # log.info(is_deploy, commit_hash, job_name, build_tag)
+        msg = "{job_name}:{commit_hash} 已经构建完成, 构建TAG: {build_tag}\n镜像地址: 192.168.1.234:5000/{job_name}:{commit_hash}".format(
+            job_name=job_name, commit_hash=commit_hash, build_tag=build_tag)
+        log.info(msg)
+        if is_deploy == 'true':
+            msg = msg + "\n开始部署测试环境"
+        return dingding_robot.send_text(msg=msg)
+    # POST
+    content = request.get_json(force=True, silent=True, cache=False)
+    token = content['token']
+    if token not in token_list:
+        return [403, '', 'Not allow, Token failed']
+    # todo
 
-    }
-    if at_mobiles is not None and type(at_mobiles) == list:
-        if len(at_mobiles) > 0:
-            data['at'] = dict()
-            data['at']['atMobiles'] = at_mobiles
-            data['at']['isAtAll'] = False
-    ret = requests.post(dd_9chain_tech_robot, json=data)
-    if ret.status_code == requests.codes.ok:
-        log.info('%s 发送成功' % msg)
-    else:
-        log.info('%s 发送失败' % msg)
-    log.info(ret.text)
+
+@app.route("/deploy/details/<build_tag>", methods=["GET"])
+def deploy_details(build_tag):
+    # todo
+    if not is_internal_ip(request.remote_addr):
+        return [403, '', 'Not allow']
 
 
 def run(content):
@@ -298,7 +264,7 @@ def run(content):
     if is_build:
         msg = '收到了构建请求!!\n' + msg + '开始向Jenkins提交构建请求\n'
         log.info('msg: %s' % msg)
-        notify_dingding(msg, existed_at_user_mobiles)
+        dingding_robot.send_text(msg=msg, at_mobiles=existed_at_user_mobiles)
         cause_msg = '%s+build' % git_hash
         if is_deploy:
             cause_msg = cause_msg + '_deploy'
@@ -332,7 +298,7 @@ def run(content):
             log.info(ret.text)
     elif len(existed_at_users) > 0:
         log.info('不构建，就通知一下')
-        notify_dingding(msg, existed_at_user_mobiles)
+        dingding_robot.send_text(msg=msg, at_mobiles=existed_at_user_mobiles)
     return [200, 'run', ""]
 
 
