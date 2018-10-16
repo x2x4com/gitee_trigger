@@ -269,14 +269,14 @@ def deploy_callback():
         is_success = False
 
     dbs.set(project_id=project_id, commit_hash=commit_hash, val=tasks, build_tag=build_tag, is_success=is_success)
-    msg = "## 命令执行情况\n\n| ID | COMMAND | CODE | ERR |\n| :------| :------ | :------ | :------ |\n"
-    url = "http://" + request.host + "/" + project_id + "/" + commit_hash
+    msg = "## 命令执行情况\n"
+    url = "http://" + request.host + "/deploy/details/" + project_id + "/" + commit_hash
     if is_success:
         title = "%s 部署成功" % commit_hash
     else:
         title = "%s 部署失败" % commit_hash
     for task in tasks:
-        dmsg = "| {deploy_id} | kubectl -f {yaml} | {code} | {err} |\n"
+        dmsg = "### {deploy_id} \n\n kubectl -f {yaml} \n\n RETURN: {code} \n\n ERR: {err} \n\n"
         dmsg.format(
             deploy_id=task["deploy_id"],
             yaml=task["deploy_file"],
@@ -285,7 +285,6 @@ def deploy_callback():
         )
         msg = msg + dmsg
     dingding_robot.send_action_card_single(title=title, single_title="点击查看详情", single_url=url, msg=msg)
-
 
 
 @app.route("/deploy/details/<project_id>/<commit_hash>", methods=["GET"])
