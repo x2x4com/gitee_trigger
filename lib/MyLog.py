@@ -137,7 +137,7 @@ def add_streamhandler(level, fmt):
     '''Add a stream handler to the global logger.'''
     return add_handler(logging.StreamHandler, level, fmt, True)
 
-def add_filehandler(level, fmt, filename , mode, backup_count, limit, when):
+def add_filehandler(level, fmt, filename , mode, backup_count, limit, when, encoding):
     '''Add a file handler to the global logger.'''
     kwargs = {}
 
@@ -148,6 +148,7 @@ def add_filehandler(level, fmt, filename , mode, backup_count, limit, when):
         filename = os.path.join('/tmp', filename)
 
     kwargs['filename'] = filename
+    kwargs['encoding'] = encoding
 
     # Choose the filehandler based on the passed arguments
     if backup_count == 0: # Use FileHandler
@@ -181,7 +182,7 @@ def init_logger():
 #这是默认的 def set_logger(filename = None, mode = 'a', level='ERROR:DEBUG',
 def set_logger(filename = None, mode = 'a', level='ERROR',
                fmt = '%(asctime)s [%(levelname)s] %(filename)s[line:%(lineno)d] %(message)s',
-               backup_count = 5, limit = 20480, when = None, console = False):
+               backup_count = 5, limit = 20480, when = None, console = False, encoding="utf8"):
     '''Configure the global logger.'''
     level = level.split(':')
 
@@ -195,7 +196,7 @@ def set_logger(filename = None, mode = 'a', level='ERROR',
     #许向添加，增加判断，只有console = True才会向STDOUT输出
     if console:
         add_streamhandler(s_level, fmt)
-    add_filehandler(f_level, fmt, filename, mode, backup_count, limit, when)
+    add_filehandler(f_level, fmt, filename, mode, backup_count, limit, when, encoding)
 
     # Import the common log functions for convenient
     import_log_funcs()
