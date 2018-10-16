@@ -248,19 +248,19 @@ def deploy_callback():
     }
     for detail in details:
         log.info(detail.keys())
-        deploy_id, deploy_yaml = detail.items()
-        target_yaml = "/tmp/" + deploy_id + ".yaml"
-        with ioOpen(target_yaml, 'w') as outfile:
-           yaml.dump_all(deploy_yaml, outfile, default_flow_style=False, allow_unicode=True)
-        cmd = "kubectl apply -f %s" % deploy_yaml
-        code, stdout, stderr = exec_shell(cmd)
-        ts = exec_status.copy()
-        ts["deploy_id"] = deploy_id
-        ts["deploy_file"] = deploy_yaml
-        ts["code"] = code
-        ts["stdout"] = b64encode(stdout.encode()).decode()
-        ts["stderr"] = b64encode(stderr.encode()).decode()
-        tasks.append(ts)
+        for deploy_id, deploy_yaml in detail.items():
+            target_yaml = "/tmp/" + deploy_id + ".yaml"
+            with ioOpen(target_yaml, 'w') as outfile:
+               yaml.dump_all(deploy_yaml, outfile, default_flow_style=False, allow_unicode=True)
+            cmd = "kubectl apply -f %s" % deploy_yaml
+            code, stdout, stderr = exec_shell(cmd)
+            ts = exec_status.copy()
+            ts["deploy_id"] = deploy_id
+            ts["deploy_file"] = deploy_yaml
+            ts["code"] = code
+            ts["stdout"] = b64encode(stdout.encode()).decode()
+            ts["stderr"] = b64encode(stderr.encode()).decode()
+            tasks.append(ts)
 
     if sum([c["code"] for c in tasks]) == 0:
         # ok all cmd return is 0

@@ -110,7 +110,7 @@ class Storage(StorageSQLite):
         except Exception as e:
             log.error("JSON encode error, %s" % e)
             return False
-        if data:
+        if type(data) == dict:
             data.update(val)
             sql = 'update data set val = "%s", is_success = "%s"  where project_id = "%s" and commit_hash = "%s"' % (data, _is_success, project_id, commit_hash)
         else:
