@@ -58,7 +58,7 @@ dingding_robot = DRobot(dd_9chain_tech_robot)
 
 # DB文件
 db_file = "/data/update_dev.db"
-dbs = Storage(db_file)
+
 
 
 def json_output():
@@ -150,6 +150,7 @@ def jenkins_callback():
     log.info(msg)
     if is_deploy == 'true':
         msg = msg + "\n开始部署测试环境"
+    dbs = Storage(db_file)
     dbs.set(commit_hash=commit_hash, val={"msg": msg}, project_id=project_id)
     return dingding_robot.send_text(msg=msg)
 
@@ -159,6 +160,7 @@ def jenkins_callback():
 def deploy_callback():
     if not is_internal_ip(request.remote_addr):
         return [403, '', 'Not allow']
+    dbs = Storage(db_file)
     if request.method == 'GET':
         token = request.args.get('token')
         if token not in token_list:
@@ -211,6 +213,7 @@ def deploy_details(project_id, commit_hash):
     # todo
     if not is_internal_ip(request.remote_addr):
         return [403, '', 'Not allow']
+    dbs = Storage(db_file)
     build_tag, is_success, val = dbs.get(project_id=project_id, commit_hash=commit_hash)
 
 
