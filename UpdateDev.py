@@ -26,16 +26,13 @@ import json
 from flask import Response
 from collections import OrderedDict
 from configparser import ConfigParser
-import subprocess
-import shlex
-import datetime
-import time
 import lib.MyLog as log
 import requests
 from cfg import jenkins, token_list, dd_9chain_tech_robot, git_user, global_password
 import re
 from functools import reduce
 from lib.Dingding import DRobot
+from lib.DB import Storage
 
 app = Flask(__name__)
 
@@ -57,6 +54,11 @@ log.set_logger(filename="/tmp/UpdateDev.log", level='INFO', console=True)
 
 # 钉钉机器人
 dingding_robot = DRobot(dd_9chain_tech_robot)
+
+# DB文件
+db_file = "/data/update_dev.db"
+dbs = Storage(db_file)
+
 
 def json_output():
     def decorate(func):
@@ -141,11 +143,13 @@ def jenkins_callback():
     is_deploy = request.args.get('is_deploy')
     job_name = request.args.get('job_name')
     build_tag = request.args.get('build_tag')
+    project_id = request.args.get("project_id")
     # log.info(is_deploy, commit_hash, job_name, build_tag)
     msg = "{job_name}:{commit_hash} 已经构建完成, 构建TAG: {build_tag}\n镜像地址: 192.168.1.234:5000/{job_name}:{commit_hash}".format(job_name=job_name, commit_hash=commit_hash, build_tag=build_tag)
     log.info(msg)
     if is_deploy == 'true':
         msg = msg + "\n开始部署测试环境"
+    dbs.set(commit_hash=commit_hash, val={"msg": msg}, project_id=project_id)
     return dingding_robot.send_text(msg=msg)
 
 
@@ -162,12 +166,14 @@ def deploy_callback():
         is_deploy = request.args.get('is_deploy')
         job_name = request.args.get('job_name')
         build_tag = request.args.get('build_tag')
+        project_id = request.args.get("project_id")
         # log.info(is_deploy, commit_hash, job_name, build_tag)
         msg = "{job_name}:{commit_hash} 已经构建完成, 构建TAG: {build_tag}\n镜像地址: 192.168.1.234:5000/{job_name}:{commit_hash}".format(
             job_name=job_name, commit_hash=commit_hash, build_tag=build_tag)
         log.info(msg)
         if is_deploy == 'true':
             msg = msg + "\n开始部署测试环境"
+        dbs.set(commit_hash=commit_hash, val={"msg": msg}, project_id=project_id)
         return dingding_robot.send_text(msg=msg)
     # POST
     content = request.get_json(force=True, silent=True, cache=False)
@@ -175,13 +181,36 @@ def deploy_callback():
     if token not in token_list:
         return [403, '', 'Not allow, Token failed']
     # todo
+    is_success = content["is_success"]
+    project_id = content["project_id"]
+    commit_hash = content["commit_hash"]
+    build_tag = content["build_tag"]
+    details = content["status_details"]
+    dbs.set(project_id=project_id, commit_hash=commit_hash, val=details, build_tag=build_tag, is_success=is_success)
+    msg = "## 命令执行情况\n\n| ID | COMMAND | CODE |\n| :------| :------ | :------ |\n"
+    url = request.host + "/" + project_id + "/" + commit_hash
+    if is_success:
+        title = "%s 部署成功" % commit_hash
+    else:
+        title = "%s 部署失败" % commit_hash
+    for detail in details:
+        dmsg = "| {deploy_id} | kubectl -f {yaml} | {code} |"
+        dmsg.format(
+            deploy_id=detail["deploy_id"],
+            yaml=detail["deploy_file"],
+            code=detail["code"],
+        )
+        msg = msg + dmsg
+    dingding_robot.send_action_card_single(title=title, single_title="点击查看详情", single_url=url, msg=msg)
 
 
-@app.route("/deploy/details/<build_tag>", methods=["GET"])
-def deploy_details(build_tag):
+
+@app.route("/deploy/details/<project_id>/<commit_hash>", methods=["GET"])
+def deploy_details(project_id, commit_hash):
     # todo
     if not is_internal_ip(request.remote_addr):
         return [403, '', 'Not allow']
+    build_tag, is_success, val = dbs.get(project_id=project_id, commit_hash=commit_hash)
 
 
 def run(content):
