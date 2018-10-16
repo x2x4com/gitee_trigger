@@ -33,6 +33,14 @@ import re
 from functools import reduce
 from lib.Dingding import DRobot
 from lib.DB import Storage
+from base64 import b64encode, b64decode
+import subprocess
+import shlex
+import datetime
+import time
+import yaml
+from io import open as ioOpen
+
 
 app = Flask(__name__)
 
@@ -89,7 +97,48 @@ def json_output():
         return wrapper
     return decorate
 
+def exec_shell(cmd, cwd=None, timeout=None, shell=False):
+    """
+        封装一个执行shell的方法
+        封装了subprocess的Popen方法，支持超时判断，支持读取stdout和stderr
+        参数：
+            cwd: 运行路径，如果被设定，子进程会切换到cwd
+            timeout: 超时时间， 秒， 支持小数，精度0.1秒
+            shell: 是否通过shell运行
+        返回： [return_code(int),'stdout(file handle)','stderr(file handle)']
+        Raises: ShellExeTimeout: 执行超时
+        在外部捕捉此错误
+        注意：如果命令带有管道，必须用shell=True
 
+    :param cmd:  string, 执行的命令
+    :param cwd:  string, 运行路径，如果被设定，子进程会切换到cwd
+    :param timeout:  float, 超时时间， 秒， 支持小数，精度0.1秒
+    :param shell:  bool, 是否通过shell运行
+    :return: return_code(int), stdout(string), stderr(string)
+    :raise RuntimeError: 运行超时
+    """
+    if timeout:
+        end_time = datetime.datetime.now() + datetime.timedelta(seconds=timeout)
+    else:
+        # 防止卡死，强制设定一个超时，10分钟
+        end_time = datetime.datetime.now() + datetime.timedelta(seconds=10*60)
+    try:
+        if shell:
+            cmd_list = cmd
+        else:
+            cmd_list = shlex.split(cmd)
+        sub = subprocess.Popen(cmd_list, cwd=cwd, stdin=subprocess.PIPE, shell=shell, bufsize=4096,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+        while sub.poll() is None:
+            time.sleep(0.1)
+            if end_time < datetime.datetime.now():
+                raise RuntimeError("Shell Run Timeout(%s sec): %s" % (timeout,cmd))
+        stdout = sub.stdout.read()
+        stderr = sub.stderr.read()
+        if type(stdout) == bytes: stdout = stdout.decode()
+        if type(stderr) == bytes: stderr = stderr.decode()
+        return int(sub.returncode), stdout, stderr
+    except OSError as e:
+        return 1, "", str(e)
 
 def ip_into_int(ip):
     # 先把 192.168.1.13 变成16进制的 c0.a8.01.0d ，再去了“.”后转成10进制的 3232235789 即可。
@@ -184,24 +233,54 @@ def deploy_callback():
     if token not in token_list:
         return [403, '', 'Not allow, Token failed']
     # todo
-    is_success = content["is_success"]
+    is_deploy = content["is_deploy"]
     project_id = content["project_id"]
     commit_hash = content["commit_hash"]
     build_tag = content["build_tag"]
     details = content["status_details"]
-    dbs.set(project_id=project_id, commit_hash=commit_hash, val=details, build_tag=build_tag, is_success=is_success)
-    msg = "## 命令执行情况\n\n| ID | COMMAND | CODE |\n| :------| :------ | :------ |\n"
+    tasks = list()
+    exec_status = {
+        "deploy_id": "",
+        "deploy_file": "",
+        "code": None,
+        "stdout": "",
+        "stderr": ""
+    }
+    for detail in details:
+        deploy_id, deploy_yaml = detail.items()
+        target_yaml = "/tmp/" + deploy_id + ".yaml"
+        with ioOpen(target_yaml, 'w') as outfile:
+           yaml.dump_all(deploy_yaml, outfile, default_flow_style=False, allow_unicode=True)
+        cmd = "kubectl apply -f %s" % deploy_yaml
+        code, stdout, stderr = exec_shell(cmd)
+        ts = exec_status.copy()
+        ts["deploy_id"] = deploy_id
+        ts["deploy_file"] = deploy_yaml
+        ts["code"] = code
+        ts["stdout"] = b64encode(stdout.encode()).decode()
+        ts["stderr"] = b64encode(stderr.encode()).decode()
+        tasks.append(ts)
+
+    if sum([c["code"] for c in tasks]) == 0:
+        # ok all cmd return is 0
+        is_success = True
+    else:
+        is_success = False
+
+    dbs.set(project_id=project_id, commit_hash=commit_hash, val=tasks, build_tag=build_tag, is_success=is_success)
+    msg = "## 命令执行情况\n\n| ID | COMMAND | CODE | ERR |\n| :------| :------ | :------ | :------ |\n"
     url = request.host + "/" + project_id + "/" + commit_hash
     if is_success:
         title = "%s 部署成功" % commit_hash
     else:
         title = "%s 部署失败" % commit_hash
-    for detail in details:
-        dmsg = "| {deploy_id} | kubectl -f {yaml} | {code} |"
+    for task in tasks:
+        dmsg = "| {deploy_id} | kubectl -f {yaml} | {code} | {err} |\n"
         dmsg.format(
-            deploy_id=detail["deploy_id"],
-            yaml=detail["deploy_file"],
-            code=detail["code"],
+            deploy_id=task["deploy_id"],
+            yaml=task["deploy_file"],
+            code=task["code"],
+            err=b64decode(task["stderr"])
         )
         msg = msg + dmsg
     dingding_robot.send_action_card_single(title=title, single_title="点击查看详情", single_url=url, msg=msg)

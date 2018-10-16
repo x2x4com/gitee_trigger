@@ -93,7 +93,7 @@ class Storage(StorageSQLite):
             val = None
         return (build_tag, is_success, val)
 
-    def set(self, project_id:str, commit_hash:str, val:dict, build_tag:str=None, is_success:bool=None):
+    def set(self, project_id:str, commit_hash:str, val:list, build_tag:str=None, is_success:bool=None):
         now = int(time.time())
         build_tag, _is_success, data = self.get(project_id, commit_hash)
         if is_success is not None:
