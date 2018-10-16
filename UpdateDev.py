@@ -429,7 +429,6 @@ def get_local_repo_url(repo, branch):
     return url
 
 
-
 def check_git_dir(target):
     pass
 
