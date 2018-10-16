@@ -284,7 +284,8 @@ def deploy_callback():
             err=b64decode(task["stderr"])
         )
         msg = msg + dmsg
-    dingding_robot.send_action_card_single(title=title, single_title="点击查看详情", single_url=url, msg=msg)
+    return dingding_robot.send_action_card_single(title=title, single_title="点击查看详情", single_url=url, msg=msg)
+
 
 
 @app.route("/deploy/details/<project_id>/<commit_hash>", methods=["GET"])
