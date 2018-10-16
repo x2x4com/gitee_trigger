@@ -277,7 +277,7 @@ def deploy_callback():
         title = "%s 部署失败" % commit_hash
     for task in tasks:
         dmsg = "### {deploy_id} \n\n kubectl -f {yaml} \n\n RETURN: {code} \n\n ERR: {err} \n\n"
-        dmsg.format(
+        dmsg = dmsg.format(
             deploy_id=task["deploy_id"],
             yaml=task["deploy_file"],
             code=task["code"],
