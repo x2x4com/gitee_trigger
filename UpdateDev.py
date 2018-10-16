@@ -276,12 +276,11 @@ def deploy_callback():
     else:
         title = "%s 部署失败" % commit_hash
     for task in tasks:
-        dmsg = "### {deploy_id} \n\n kubectl -f {yaml} \n\n RETURN: {code} \n\n ERR: {err} \n\n"
+        dmsg = "### {deploy_id} \n- CMD: kubectl -f {yaml} \n- RETURN: {code} \n"
         dmsg = dmsg.format(
             deploy_id=task["deploy_id"],
             yaml=task["deploy_file"],
             code=task["code"],
-            err=b64decode(task["stderr"])
         )
         msg = msg + dmsg
     return dingding_robot.send_action_card_single(title=title, single_title="点击查看详情", single_url=url, msg=msg)
@@ -295,7 +294,8 @@ def deploy_details(project_id, commit_hash):
         return [403, '', 'Not allow']
     dbs = Storage(db_file)
     build_tag, is_success, val = dbs.get(project_id=project_id, commit_hash=commit_hash)
-    #todo
+    return "TODO"
+
 
 def run(content):
     """
