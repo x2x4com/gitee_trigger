@@ -200,7 +200,7 @@ def jenkins_callback():
     if is_deploy == 'true':
         msg = msg + "\n开始部署测试环境"
     dbs = Storage(db_file)
-    dbs.set(commit_hash=commit_hash, val={"msg": msg}, project_id=project_id)
+    dbs.set(commit_hash=commit_hash, val=msg, project_id=project_id)
     return dingding_robot.send_text(msg=msg)
 
 
@@ -225,7 +225,7 @@ def deploy_callback():
         log.info(msg)
         if is_deploy == 'true':
             msg = msg + "\n开始部署测试环境"
-        dbs.set(commit_hash=commit_hash, val={"msg": msg}, project_id=project_id)
+        dbs.set(commit_hash=commit_hash, val=msg, project_id=project_id)
         return dingding_robot.send_text(msg=msg)
     # POST
     content = request.get_json(force=True, silent=True, cache=False)
@@ -247,6 +247,7 @@ def deploy_callback():
         "stderr": ""
     }
     for detail in details:
+        log.info(detail)
         deploy_id, deploy_yaml = detail.items()
         target_yaml = "/tmp/" + deploy_id + ".yaml"
         with ioOpen(target_yaml, 'w') as outfile:
