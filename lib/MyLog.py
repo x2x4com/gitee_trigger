@@ -180,7 +180,7 @@ def init_logger():
 
 #这是默认的 def set_logger(filename = None, mode = 'a', level='ERROR:DEBUG',
 def set_logger(filename = None, mode = 'a', level='ERROR',
-               fmt = '%(asctime)s [%(levelname)s] %(filename)s[line:%(lineno)d] u%(message)s',
+               fmt = '%(asctime)s [%(levelname)s] %(filename)s[line:%(lineno)d] %(message)s'.encode("utf-8"),
                backup_count = 5, limit = 20480, when = None, console = False):
     '''Configure the global logger.'''
     level = level.split(':')
