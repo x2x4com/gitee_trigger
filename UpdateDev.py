@@ -28,7 +28,7 @@ from collections import OrderedDict
 from configparser import ConfigParser
 import lib.MyLog as log
 import requests
-from cfg import jenkins, token_list, dd_9chain_tech_robot, git_user, global_password
+from cfg import jenkins, token_list, dd_9chain_tech_robot, git_user, global_password, DEBUG
 import re
 from functools import reduce
 from lib.Dingding import DRobot
@@ -40,7 +40,7 @@ app = Flask(__name__)
 listen = '0.0.0.0'
 port = 10080
 processes = 4
-debug = True
+debug = DEBUG
 
 
 # 输出规范
