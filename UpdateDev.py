@@ -294,7 +294,7 @@ def deploy_details(project_id, commit_hash):
         return [403, '', 'Not allow']
     dbs = Storage(db_file)
     build_tag, is_success, val = dbs.get(project_id=project_id, commit_hash=commit_hash)
-
+    #todo
 
 def run(content):
     """
