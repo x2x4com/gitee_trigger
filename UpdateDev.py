@@ -270,7 +270,7 @@ def deploy_callback():
 
     dbs.set(project_id=project_id, commit_hash=commit_hash, val=tasks, build_tag=build_tag, is_success=is_success)
     msg = "## 命令执行情况\n\n| ID | COMMAND | CODE | ERR |\n| :------| :------ | :------ | :------ |\n"
-    url = request.host + "/" + project_id + "/" + commit_hash
+    url = "http://" + request.host + "/" + project_id + "/" + commit_hash
     if is_success:
         title = "%s 部署成功" % commit_hash
     else:
