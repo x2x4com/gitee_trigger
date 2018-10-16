@@ -328,7 +328,7 @@ def run(content):
         return [400, '', 'branch %s, not support' % ref]
     # 开始正式干活儿, 搜索commit 信息
     head_commit = content['head_commit']
-    message = head_commit['message']
+    message = str(head_commit['message'])
     log.info("Commit Message: %s" % message)
     # 找所有at的对象
     log.info('Search for at')
