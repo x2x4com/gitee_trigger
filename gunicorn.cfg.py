@@ -7,12 +7,12 @@ bind = '0.0.0.0:10080'
 preload_app = True
  
 # 开启进程
-# workers=4
-workers = multiprocessing.cpu_count() * 2 + 1
+workers = 4
+# workers = multiprocessing.cpu_count() * 2 + 1
  
 # 每个进程的开启线程
 # threads = multiprocessing.cpu_count() * 2
-threads = multiprocessing.cpu_count()
+threads = multiprocessing.cpu_count() * 2
  
 backlog = 2048
  
@@ -28,13 +28,12 @@ daemon = True
 proc_name = 'gunicorn.pid'
  
 # 进程pid记录文件
-pidfile = 'app_pid.log'
+pidfile = '/tmp/UpdateDev.pid.log'
 
 chdir = '/home/runner/UpdateHook'
 
 loglevel = 'info'
-logfile = 'debug.log'
-accesslog = 'access.log'
+logfile = '/tmp/app_UpdateHook_debug.log'
 access_log_format = '%(t)s %(p)s %(h)s "%(r)s" %(s)s %(L)s %(b)s %(f)s" "%(a)s"'    #设置gunicorn访问日志格式，错误日志无法设置
 
 """
