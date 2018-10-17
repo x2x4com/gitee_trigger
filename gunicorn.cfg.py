@@ -2,8 +2,7 @@
 
 import multiprocessing
  
-# 监听本机的8000端口
-bind = '0.0.0.0:8000'
+bind = '0.0.0.0:10080'
  
 preload_app = True
  
