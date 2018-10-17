@@ -413,7 +413,7 @@ def run(content):
     elif len(existed_at_users) > 0:
         log.info('不构建，就通知一下')
         dingding_robot.send_text(msg=msg, at_mobiles=existed_at_user_mobiles)
-    return [200, 'run', ""]
+    return [200, '%s/%s:%s done' % (namespace, name, ref), ""]
 
 
 def is_existed(repo):
