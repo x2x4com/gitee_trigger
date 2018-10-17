@@ -347,10 +347,11 @@ def run(content):
     is_deploy = False
     is_build = False
     log.info('Search for cmd')
-    re_cmd = re.compile(r'#CMD:(build(?:\+deploy)?)')
+    #re_cmd = re.compile(r'#CMD:((?:build)?(?:\+deploy)?)')
+    re_cmd = re.compile(r'#CMD:(build\+deploy|build|deploy)')
     cmds = re_cmd.findall(message)
     for cmd in cmds:
-        if cmd == 'build+deploy':
+        if cmd in ['build+deploy', 'deploy']:
             is_build = True
             is_deploy = True
         if cmd == 'build':
