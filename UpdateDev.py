@@ -28,7 +28,7 @@ from collections import OrderedDict
 from configparser import ConfigParser
 import lib.MyLog as log
 import requests
-from cfg import jenkins, token_list, dd_9chain_tech_robot, git_user, global_password, DEBUG
+from cfg import jenkins, token_list, dd_9chain_tech_robot, git_user, global_password, DEBUG, gitee_token
 import re
 from functools import reduce
 from lib.Dingding import DRobot
@@ -286,7 +286,6 @@ def deploy_callback():
     return dingding_robot.send_action_card_single(title=title, single_title="点击查看详情", single_url=url, msg=msg)
 
 
-
 @app.route("/deploy/details/<project_id>/<commit_hash>", methods=["GET"])
 def deploy_details(project_id, commit_hash):
     # todo
@@ -301,8 +300,26 @@ def create_alpha_issue(content):
     project = "%s/%s" % (content['project']['namespace'], content['project']['name'])
     git_hash = content['after']
     branch = "alpha"
+    body = "project: %s\nbranch: %s\ncommit hash:%s\n" % (project, branch, git_hash)
     log.info("Create update issue: %s %s %s" % (project, branch, git_hash))
-    return [200, "ok", ""]
+    url = "https://gitee.com/api/v5/repos/ninechain/issues"
+    payload = {
+        "access_token": "",
+        "title": "Update Alpha %s" % project,
+        "body": body,
+        "assignee": "zachzhang0213",
+    }
+    r = requests.post(url, json=payload)
+    if r.status_code == 200:
+        try:
+            rt = r.json()
+            number = rt["number"]
+        except json.JSONDecodeError:
+            return [500, "", "decode json error, %s" % r.text]
+        except KeyError:
+            return [500, "", "decode json error, number not find"]
+        return [200, number, ""]
+    return [500, "", "server not return 200, %s" % r.text]
 
 
 def run(content):
