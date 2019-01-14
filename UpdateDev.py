@@ -309,18 +309,25 @@ def create_alpha_issue(content):
         "body": body,
         "assignee": "zachzhang0213",
     }
+    log.info("url: %s" % url)
     r = requests.post(url, json=payload)
+    log.info("code: %s" % r.status_code)
     if r.status_code == 200:
         try:
             rt = r.json()
             number = rt["number"]
         except json.JSONDecodeError:
-            return [500, "", "decode json error, %s" % r.text]
+            err = "decode json error, %s" % r.text
+            log.error(err)
+            return [500, "", err]
         except KeyError:
-            return [500, "", "decode json error, number not find"]
+            err = "decode json error, number not find"
+            log.error(err)
+            return [500, "", err]
         log.info("Create issue %s" % number)
         return [200, number, ""]
-    return [500, "", "server not return 200, %s" % r.text]
+    err = "server not return 200, %s" % r.text
+    return [500, "", err]
 
 
 def run(content):
