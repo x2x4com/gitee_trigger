@@ -304,7 +304,7 @@ def create_alpha_issue(content):
     log.info("Create update issue: %s %s %s" % (project, branch, git_hash))
     url = "https://gitee.com/api/v5/repos/ninechain/issues"
     payload = {
-        "access_token": "",
+        "access_token": gitee_token,
         "title": "Update Alpha %s" % project,
         "body": body,
         "assignee": "zachzhang0213",
@@ -327,6 +327,7 @@ def create_alpha_issue(content):
         log.info("Create issue %s" % number)
         return [200, number, ""]
     err = "server not return 200, %s" % r.text
+    log.error(err)
     return [500, "", err]
 
 
