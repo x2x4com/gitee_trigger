@@ -318,6 +318,7 @@ def create_alpha_issue(content):
             return [500, "", "decode json error, %s" % r.text]
         except KeyError:
             return [500, "", "decode json error, number not find"]
+        log.info("Create issue %s" % number)
         return [200, number, ""]
     return [500, "", "server not return 200, %s" % r.text]
 
