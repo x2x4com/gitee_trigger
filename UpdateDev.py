@@ -312,7 +312,7 @@ def create_alpha_issue(content):
     log.info("url: %s" % url)
     r = requests.post(url, json=payload)
     log.info("code: %s" % r.status_code)
-    if r.status_code == 200:
+    if r.status_code == 201:
         try:
             rt = r.json()
             number = rt["number"]
