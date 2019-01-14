@@ -297,6 +297,14 @@ def deploy_details(project_id, commit_hash):
     return "TODO"
 
 
+def create_alpha_issue(content):
+    project = "%s/%s" % (content['project']['namespace'], content['project']['name'])
+    git_hash = content['after']
+    branch = "alpha"
+    log.info("Create update issue: %s %s %s" % (project, branch, git_hash))
+    return [200, "ok", ""]
+
+
 def run(content):
     """
     run 开始执行操作
@@ -324,6 +332,8 @@ def run(content):
     # ref 必须为 配置文件中指定的，否则跳出
     ref = content['ref'].split('/')[-1]
     log.info('target %s/%s ,branch %s' % (namespace, name, ref))
+    if ref == "alpha":
+        return create_alpha_issue(content)
     if ref not in project['branch']:
         log.error('target %s/%s ,branch %s, not support' % (namespace, name, ref))
         return [400, '', 'branch %s, not support' % ref]
