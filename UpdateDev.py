@@ -51,7 +51,6 @@ processes = 4
 debug = DEBUG
 
 
-
 # 输出规范
 stand = OrderedDict()
 stand['ret'] = 200
@@ -66,7 +65,6 @@ dingding_robot = DRobot(dd_9chain_tech_robot)
 
 # DB文件
 db_file = "/data/update_dev.db"
-
 
 
 def json_output():
@@ -96,6 +94,7 @@ def json_output():
             return Response(result, mimetype='application/json', status=stand['ret'])
         return wrapper
     return decorate
+
 
 def exec_shell(cmd, cwd=None, timeout=None, shell=False):
     """
@@ -140,10 +139,12 @@ def exec_shell(cmd, cwd=None, timeout=None, shell=False):
     except OSError as e:
         return 1, "", str(e)
 
+
 def ip_into_int(ip):
     # 先把 192.168.1.13 变成16进制的 c0.a8.01.0d ，再去了“.”后转成10进制的 3232235789 即可。
     # (((((192 * 256) + 168) * 256) + 1) * 256) + 13
     return reduce(lambda x,y:(x<<8)+y,map(int,ip.split('.')))
+
 
 def is_internal_ip(ip):
     ip = ip_into_int(ip)
