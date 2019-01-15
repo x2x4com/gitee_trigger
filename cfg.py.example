@@ -1,0 +1,105 @@
+#!/usr/bin/env python
+# encoding: utf-8
+# ===============================================================================
+#
+#         FILE:  
+#
+#        USAGE:    
+#
+#  DESCRIPTION:  
+#
+#      OPTIONS:  ---
+# REQUIREMENTS:  ---
+#         BUGS:  ---
+#        NOTES:  ---
+#       AUTHOR:  YOUR NAME (), 
+#      COMPANY:  
+#      VERSION:  1.0
+#      CREATED:  
+#     REVISION:  ---
+# ===============================================================================
+
+repos = {
+    "ninechain": {
+        "UpdateHook": {
+            "password": "xxxxx",
+            "local_dir": "/home/runner/UpdateHook",
+            "branch": "master",
+        },
+    },
+    "artwook": {
+        "www_source": {
+            "password": "xxxxxxxxx",
+            "local_dir": "/git/artwook/www_source.git",
+            "remote": "git@someothersite.org:9chain-artwook/www.git",
+            "branch": "master",
+        },
+        "app_gateway": {
+            "password": "xxxxxxxxx",
+            "local_dir": "/git/artwook/app_gateway.git",
+            "remote": "git@someothersite.org:9chain-artwook/app_gateway.git",
+            "branch": "master",
+        },
+        "app_main": {
+            "password": "xxxxxxxxx",
+            "local_dir": "/git/artwook/app_main.git",
+            "remote": "git@someothersite.org:9chain-artwook/app_main.git",
+            "branch": "master",
+        },
+        "wallet-web": {
+            "password": "xxxxxxxxx",
+            "local_dir": "/git/artwook/wallet-web.git",
+            "remote": "git@someothersite.org:9chain-artwook/wallet-web.git",
+            "branch": "master",
+        },
+        "app_blockscanner": {
+            "password": "xxxxxxxxx",
+            "local_dir": "/git/artwook/app_blockscanner.git",
+            "remote": "git@someothersite.org:9chain-artwook/app_blockscanner.git",
+            "branch": "master",
+        },
+    },
+}
+
+token_list = [
+    'xxxxxxxxx',
+    'xxxxxxxxx'
+]
+
+global_password = [
+    'xxxxxxxxx'
+]
+
+jenkins = {
+    'user': 'x2x4',
+    'secret': 'xxxxxxxxx',
+    'host': 'http://192.168.1.234:18080',
+    'repos': {
+        "artwook": {
+            "blockscanner": {
+                "branch": ["dev"],
+                'jenkins_url': '/job/blockscanner',
+                'jenkins_token': 'xxxxxxxxx'
+            },
+        },
+        "ninechain": {
+            "UpdateHook": {
+                "branch": ['dev'],
+                'jenkins_url': '/job/blockscanner',
+                'jenkins_token': 'xxxxxxxxx'
+            },
+        },
+    }
+}
+
+dd_9chain_tech_robot='https://oapi.dingtalk.com/robot/send?access_token=xxxxxxxxx'
+
+# key 码云的用户username
+# val 对应的dingding手机号码
+git_user = {
+    'x2x4': 10000000000,
+
+}
+
+DEBUG = False
+gitee_token = "xxxxxxxxx"
