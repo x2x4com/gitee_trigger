@@ -85,7 +85,4 @@ master分支
 
 ## 如何使用
 
-TODO
-
-
-
+[点击这里](https://gitee.com/x2x4/gitee_trigger/blob/master/docs/automatic_build_with_gitee.md)
