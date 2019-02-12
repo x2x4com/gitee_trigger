@@ -177,9 +177,9 @@ def update_json():
     if request.method == 'POST':
         content = request.get_json(force=True, silent=True, cache=False)
 
-        token = request.args.get('token')
-        if token not in token_list:
-            return [403, "", "Access deny, token failed"]
+        # token = request.args.get('token')
+        # if token not in token_list:
+        #     return [403, "", "Access deny, token failed"]
         return run(content)
     return "hello"
 
