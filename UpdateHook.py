@@ -150,11 +150,13 @@ def update_json():
     :return:
     """
     if request.method == 'POST':
-        content = request.get_json(force=True)
+        content = request.get_json(force=True, silent=True, cache=False)
 
         # token = request.args.get('token')
         # if token not in token_list:
         #     return [400, "", "Access deny, token failed"]
+        if not content:
+            return [400, "", "Illegal parameter"]
         namespace = content['project']['namespace']
         name = content['project']['name']
         url = [content['project']['git_ssh_url'], content['project']['git_http_url']]

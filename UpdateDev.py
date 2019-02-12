@@ -180,6 +180,8 @@ def update_json():
         # token = request.args.get('token')
         # if token not in token_list:
         #     return [403, "", "Access deny, token failed"]
+        if not content:
+            return [400, "", "Illegal parameter"]
         return run(content)
     return "hello"
 
