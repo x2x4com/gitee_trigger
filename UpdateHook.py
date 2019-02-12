@@ -46,10 +46,10 @@ debug = True
 
 
 # 输出规范
-stand = OrderedDict()
-stand['ret'] = 200
-stand['data'] = None
-stand['msg'] = None
+std_out = OrderedDict()
+std_out['ret'] = 200
+std_out['data'] = None
+std_out['msg'] = None
 
 # 日志输出
 log.set_logger(filename="/tmp/UpdateHook.log", level='INFO', console=False)
@@ -59,7 +59,8 @@ def json_output():
         @wraps(func)
         def wrapper(*args, **kwargs):
             result = func(*args, **kwargs)
-            if type(result) == list:
+            stand = std_out.copy()
+            if type(result) == list or type(result) == tuple:
                 try:
                     stand['ret'] = int(result[0])
                 except IndexError:
