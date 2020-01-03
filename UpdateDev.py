@@ -304,7 +304,7 @@ def create_alpha_issue(content):
     project = "%s/%s" % (content['project']['namespace'], content['project']['name'])
     git_hash = content['after']
     branch = "alpha"
-    body = "project: %s\nbranch: %s\ncommit hash:%s\n" % (project, branch, git_hash)
+    body = "project: %s\nbranch: %s\ncommit hash: %s\n" % (project, branch, git_hash)
     log.info("Create update issue: %s %s %s" % (project, branch, git_hash))
     url = "https://gitee.com/api/v5/repos/ninechain/issues"
     payload = {
