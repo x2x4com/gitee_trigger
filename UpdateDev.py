@@ -385,19 +385,21 @@ def run(content):
         if str(want_at_user) in git_user.keys():
             existed_at_users.append(str(want_at_user))
     log.info('at users: %s' % existed_at_users)
-    # 找所有的 CMD
     is_deploy = False
     is_build = False
-    log.info('Search for cmd')
-    #re_cmd = re.compile(r'#CMD:((?:build)?(?:\+deploy)?)')
-    re_cmd = re.compile(r'#CMD:(build\+deploy|build|deploy)')
-    cmds = re_cmd.findall(message)
-    for cmd in cmds:
-        if cmd in ['build+deploy', 'deploy']:
-            is_build = True
-            is_deploy = True
-        if cmd == 'build':
-            is_build = True
+    # 找所有的 CMD
+    # only when not in alpha or master branch
+    if ref not in ['alpha', 'master']:
+        log.info('Search for cmd')
+        #re_cmd = re.compile(r'#CMD:((?:build)?(?:\+deploy)?)')
+        re_cmd = re.compile(r'#CMD:(build\+deploy|build|deploy)')
+        cmds = re_cmd.findall(message)
+        for cmd in cmds:
+            if cmd in ['build+deploy', 'deploy']:
+                is_build = True
+                is_deploy = True
+            if cmd == 'build':
+                is_build = True
 
     # check auto_build_branch, auto_deploy_branch config
     if 'auto_build_branch' in project and ref in project['auto_build_branch']:
