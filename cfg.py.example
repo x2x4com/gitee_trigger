@@ -103,3 +103,6 @@ git_user = {
 
 DEBUG = False
 gitee_token = "xxxxxxxxx"
+
+gitee_issue_api_url = 'https://gitee.com/api/v5/repos/ORG/issues'
+default_isssue_assignee = 'robot'

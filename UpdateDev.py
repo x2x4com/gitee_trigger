@@ -28,7 +28,7 @@ from collections import OrderedDict
 from configparser import ConfigParser
 import lib.MyLog as log
 import requests
-from cfg import jenkins, token_list, dd_9chain_tech_robot, git_user, global_password, DEBUG, gitee_token
+from cfg import jenkins, token_list, dd_9chain_tech_robot, git_user, global_password, DEBUG, gitee_token, gitee_issue_api_url, default_isssue_assignee
 import re
 from functools import reduce
 from lib.Dingding import DRobot
@@ -300,18 +300,18 @@ def deploy_details(project_id, commit_hash):
     return "TODO"
 
 
-def create_alpha_issue(content):
+def create_gitee_issue(content):
     project = "%s/%s" % (content['project']['namespace'], content['project']['name'])
     git_hash = content['after']
-    branch = "alpha"
+    branch = content['ref'].split('/')[-1]  # ref: refs/heads/alpha
     body = "project: %s\nbranch: %s\ncommit hash: %s\n" % (project, branch, git_hash)
     log.info("Create update issue: %s %s %s" % (project, branch, git_hash))
-    url = "https://gitee.com/api/v5/repos/ninechain/issues"
+    url = gitee_issue_api_url
     payload = {
         "access_token": gitee_token,
-        "title": "Update Alpha %s" % project,
+        "title": "Update %s %s" % (branch.capitalize(), project),
         "body": body,
-        "assignee": "zachzhang0213",
+        "assignee": default_isssue_assignee,
     }
     log.info("url: %s" % url)
     r = requests.post(url, json=payload)
@@ -362,8 +362,10 @@ def run(content):
     # ref 必须为 配置文件中指定的，否则跳出
     ref = content['ref'].split('/')[-1]
     log.info('target %s/%s ,branch %s' % (namespace, name, ref))
-    if ref == "alpha":
-        return create_alpha_issue(content)
+    # Create Gitee issue when is alpha or master branch
+    if ref in ['alpha', 'master']:
+        create_gitee_issue(content)
+
     if ref not in project['branch']:
         log.error('target %s/%s ,branch %s, not support' % (namespace, name, ref))
         return [400, '', 'branch %s, not support' % ref]
