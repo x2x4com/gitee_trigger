@@ -84,6 +84,27 @@ jenkins = {
                 'jenkins_token': 'xxxxxxxxx'
             },
         },
+        "bidpoc": {
+            "bidpoc_gateway": {
+                'branch': ['dev', 'alpha', 'master'],
+                'auto_build_branch': ['alpha', 'master'],
+                'auto_deploy_branch': ['dev'],
+                'jenkins_jobs': {
+                    'dev': {
+                        'jenkins_url': '/job/bidpoc_gateway',
+                        'jenkins_token': 'xxxxxxxxx'
+                    },
+                    'alpha': {
+                        'jenkins_url': '/job/bidpoc_gateway-alpha-n-master',
+                        'jenkins_token': 'xxxxxxxxx'
+                    },
+                    'master': {
+                        'jenkins_url': '/job/bidpoc_gateway-alpha-n-master',
+                        'jenkins_token': 'xxxxxxxxx'
+                    },
+                },
+            },
+        },
         "ninechain": {
             "UpdateHook": {
                 "branch": ['dev'],
