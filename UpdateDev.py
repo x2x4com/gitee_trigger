@@ -399,6 +399,13 @@ def run(content):
         if cmd == 'build':
             is_build = True
 
+    # check auto_build_branch, auto_deploy_branch config
+    if 'auto_build_branch' in project and ref in project['auto_build_branch']:
+        is_build = True
+    if 'auto_deploy_branch' in project and ref in project['auto_deploy_branch']:
+        is_build = True
+        is_deploy = True
+
     log.info('isBuild: %s' % is_build)
     log.info('isDeploy: %s' % is_deploy)
 

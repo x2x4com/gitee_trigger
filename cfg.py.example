@@ -78,6 +78,8 @@ jenkins = {
         "artwook": {
             "blockscanner": {
                 "branch": ["dev"],
+                'auto_build_branch': ['dev'],
+                'auto_deploy_branch': ['dev'],
                 'jenkins_url': '/job/blockscanner',
                 'jenkins_token': 'xxxxxxxxx'
             },
