@@ -207,3 +207,5 @@ dbs/
 
 .vscode
 *.go
+
+gunicorn-dev.cfg.py

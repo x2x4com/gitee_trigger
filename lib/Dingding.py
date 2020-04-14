@@ -38,8 +38,8 @@ class NoStorage(object):
 
 
 class Storage(StorageSQLite):
-    def __init__(self, db_file):
-        super().__init__(db_file)
+    def __init__(self, db_file, check_same_thread=False):
+        super().__init__(db_file, check_same_thread)
         if self.is_empty("dingding"):
             sql = 'create table dingding (' \
                   'id integer primary key, ' \
@@ -61,11 +61,12 @@ class Storage(StorageSQLite):
                 is_success = 0
         except json.JSONDecodeError:
             is_success = 0
-        sql = 'insert into data ' \
+        sql = 'insert into dingding ' \
               '(create_time, msg_from, msg_type, is_success, payload, ret) values ' \
               '("%s", "%s", "%s", "%s", \'%s\', \'%s\')' % (
                now, msg_from, msg_type, is_success, json.dumps(payload), ret
               )
+        log.info(sql)
         self._save_data(sql)
 
 
@@ -130,7 +131,7 @@ class DRobot(object):
         }
     }
 
-    def __init__(self, robot_url, is_sign=False, token=None, secret=None, db_file=None):
+    def __init__(self, robot_url, is_sign=False, token=None, secret=None, db_file=None, check_same_thread=False):
         self.__is_url(robot_url)
         self.__robot_url = robot_url
         if is_sign:
@@ -141,7 +142,7 @@ class DRobot(object):
         self.__secret = secret
         self.__is_sign = is_sign
         if db_file is not None:
-            self.__db = Storage(db_file)
+            self.__db = Storage(db_file, check_same_thread=check_same_thread)
         else:
             self.__db = NoStorage()
 

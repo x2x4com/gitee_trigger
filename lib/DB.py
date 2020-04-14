@@ -30,13 +30,13 @@ class StorageSQLite(object):
     db_file = None
     handle = None
 
-    def __init__(self, db_file):
+    def __init__(self, db_file, check_same_thread=False):
         self.db_file = db_file
-        self.connect()
+        self.connect(check_same_thread)
 
-    def connect(self):
+    def connect(self, check_same_thread):
         try:
-            self.handle = sqlite3.connect(self.db_file)
+            self.handle = sqlite3.connect(self.db_file, check_same_thread=check_same_thread)
         except sqlite3.OperationalError as e:
             RuntimeError("db error: %s" % e)
 
