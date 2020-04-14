@@ -28,7 +28,7 @@ from collections import OrderedDict
 from configparser import ConfigParser
 import lib.MyLog as log
 import requests
-from cfg import jenkins, token_list, dd_9chain_tech_robot, git_user, global_password, DEBUG, gitee_token
+from cfg import jenkins, token_list, dd_9chain_tech_robot, git_user, global_password, DEBUG, gitee_token, gitee_issue_api_url, default_isssue_assignee
 import re
 from functools import reduce
 from lib.Dingding import DRobot
@@ -300,18 +300,18 @@ def deploy_details(project_id, commit_hash):
     return "TODO"
 
 
-def create_alpha_issue(content):
+def create_gitee_issue(content):
     project = "%s/%s" % (content['project']['namespace'], content['project']['name'])
     git_hash = content['after']
-    branch = "alpha"
-    body = "project: %s\nbranch: %s\ncommit hash:%s\n" % (project, branch, git_hash)
+    branch = content['ref'].split('/')[-1]  # ref: refs/heads/alpha
+    body = "project: %s\nbranch: %s\ncommit hash: %s\n" % (project, branch, git_hash)
     log.info("Create update issue: %s %s %s" % (project, branch, git_hash))
-    url = "https://gitee.com/api/v5/repos/ninechain/issues"
+    url = gitee_issue_api_url
     payload = {
         "access_token": gitee_token,
-        "title": "Update Alpha %s" % project,
+        "title": "Update %s %s" % (branch.capitalize(), project),
         "body": body,
-        "assignee": "zachzhang0213",
+        "assignee": default_isssue_assignee,
     }
     log.info("url: %s" % url)
     r = requests.post(url, json=payload)
@@ -362,8 +362,10 @@ def run(content):
     # ref 必须为 配置文件中指定的，否则跳出
     ref = content['ref'].split('/')[-1]
     log.info('target %s/%s ,branch %s' % (namespace, name, ref))
-    if ref == "alpha":
-        return create_alpha_issue(content)
+    # Create Gitee issue when is alpha or master branch
+    if ref in ['alpha', 'master']:
+        create_gitee_issue(content)
+
     if ref not in project['branch']:
         log.error('target %s/%s ,branch %s, not support' % (namespace, name, ref))
         return [400, '', 'branch %s, not support' % ref]
@@ -383,19 +385,28 @@ def run(content):
         if str(want_at_user) in git_user.keys():
             existed_at_users.append(str(want_at_user))
     log.info('at users: %s' % existed_at_users)
-    # 找所有的 CMD
     is_deploy = False
     is_build = False
-    log.info('Search for cmd')
-    #re_cmd = re.compile(r'#CMD:((?:build)?(?:\+deploy)?)')
-    re_cmd = re.compile(r'#CMD:(build\+deploy|build|deploy)')
-    cmds = re_cmd.findall(message)
-    for cmd in cmds:
-        if cmd in ['build+deploy', 'deploy']:
-            is_build = True
-            is_deploy = True
-        if cmd == 'build':
-            is_build = True
+    # 找所有的 CMD
+    # only when not in alpha or master branch
+    if ref not in ['alpha', 'master']:
+        log.info('Search for cmd')
+        #re_cmd = re.compile(r'#CMD:((?:build)?(?:\+deploy)?)')
+        re_cmd = re.compile(r'#CMD:(build\+deploy|build|deploy)')
+        cmds = re_cmd.findall(message)
+        for cmd in cmds:
+            if cmd in ['build+deploy', 'deploy']:
+                is_build = True
+                is_deploy = True
+            if cmd == 'build':
+                is_build = True
+
+    # check auto_build_branch, auto_deploy_branch config
+    if 'auto_build_branch' in project and ref in project['auto_build_branch']:
+        is_build = True
+    if 'auto_deploy_branch' in project and ref in project['auto_deploy_branch']:
+        is_build = True
+        is_deploy = True
 
     log.info('isBuild: %s' % is_build)
     log.info('isDeploy: %s' % is_deploy)
@@ -408,6 +419,21 @@ def run(content):
     jenkins_user = jenkins['user']
     jenkins_secret = jenkins['secret']
 
+    # find jenkins_url and jenkins_token
+    try:
+        if 'jenkins_url' in project and 'jenkins_token' in project:
+            # single Jenkins job config
+            jenkins_url = project['jenkins_url']
+            jenkins_token = project['jenkins_token']
+        elif 'jenkins_jobs' in project:
+            # multiple Jenkins jobs config
+            jenkins_url = project['jenkins_jobs'][ref]['jenkins_url']
+            jenkins_token = project['jenkins_jobs'][ref]['jenkins_token']
+        else:
+            return [500, '', 'Missing jenkins_url config']
+    except KeyError:
+        return [500, '', 'Invalid jenkins_url config']
+
     msg = '%s在分支%s上提交了代码%s\n提交信息: %s\n' % (gitee_user, ref, git_hash, message)
     existed_at_user_mobiles = list()
     for existed_at_user in existed_at_users:
@@ -416,21 +442,29 @@ def run(content):
         existed_at_user_mobiles.append(existed_at_user_mobile)
 
     if is_build:
+        """
+        NOTE: 配置文件的结构决定了同一代码库只支持一个 Jenkins Job，原有的
+        branch 列表其实是有迷惑性的，具体支持哪些分支其实是由 Jenkins Job 的
+        配置决定的，原有代码里的 branch 列表其实只是做个拦截、筛选的作用
+        auto_build_branch 和 auto_deploy_branch 同样也是有迷惑性的，真正 Job 做
+        什么还得具体看 Job 的配置
+
+        现改为以分支作为 Jenkins Job 的入口(尚不确定如果单次推送包含多个分支时
+        Gitee 是按分支来分别触发 WebHook 事件还是单次事件中就包含该次推送的所有
+        内容，从 Payload 的数据结构来看应该是按分支来多次触发推送)，同时支持原有
+        格式的配置(即单一 Jenkins Job)，但新结构有个问题就是若仅有单 Jenkins
+        Job 且该 Job 配置支持多个分支的话配置文件将比较冗余(建议单个 Job 不配置
+        多分支)……
+        """
         msg = '收到了构建请求!!\n' + msg + '开始向Jenkins提交构建请求\n'
         log.info('msg: %s' % msg)
         dingding_robot.send_text(msg=msg, at_mobiles=existed_at_user_mobiles)
         cause_msg = '%s+build' % git_hash
         if is_deploy:
             cause_msg = cause_msg + '_deploy'
-            request_url = '%s%s/buildWithParameters?token=%s&is_deploy=true&cause=%s' % (jenkins_hosts,
-                                                                project['jenkins_url'],
-                                                                project['jenkins_token'],
-                                                                cause_msg)
+            request_url = '%s%s/buildWithParameters?token=%s&is_deploy=true&cause=%s' % (jenkins_hosts, jenkins_url, jenkins_token, cause_msg)
         else:
-            request_url = '%s%s/buildWithParameters?token=%s&is_deploy=false&cause=%s' % (jenkins_hosts,
-                                                        project['jenkins_url'],
-                                                        project['jenkins_token'],
-                                                        cause_msg)
+            request_url = '%s%s/buildWithParameters?token=%s&is_deploy=false&cause=%s' % (jenkins_hosts, jenkins_url, jenkins_token, cause_msg)
 
         log.info(request_url)
         ret = requests.get(request_url, auth=(jenkins_user, jenkins_secret))
