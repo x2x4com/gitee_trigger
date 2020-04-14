@@ -26,7 +26,7 @@ import time
 log.set_logger(filename="/tmp/DB.log", level='INFO', console=True)
 
 
-class StorageSQLite():
+class StorageSQLite(object):
     db_file = None
     handle = None
 

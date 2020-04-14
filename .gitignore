@@ -202,4 +202,8 @@ tags
 cfg.py
 cfg.json
 
+# db
+dbs/
+
 .vscode
+*.go

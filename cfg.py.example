@@ -129,3 +129,7 @@ gitee_token = "xxxxxxxxx"
 
 gitee_issue_api_url = 'https://gitee.com/api/v5/repos/ORG/issues'
 default_isssue_assignee = 'robot'
+
+dingding_db = './dbs/dingding.db'
+dingding_token = ''
+dingding_secret = ''
