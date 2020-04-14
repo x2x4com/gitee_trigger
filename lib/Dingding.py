@@ -66,7 +66,7 @@ class Storage(StorageSQLite):
               '("%s", "%s", "%s", "%s", \'%s\', \'%s\')' % (
                now, msg_from, msg_type, is_success, json.dumps(payload), ret
               )
-        log.info(sql)
+        # log.info(sql)
         self._save_data(sql)
 
 
