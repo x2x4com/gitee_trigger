@@ -21,8 +21,14 @@
 
 import requests
 import MyLog as log
+import time
+import hmac
+import hashlib
+import base64
+import urllib.parse
 
 log.set_logger(filename="/tmp/Dingding.log", level='INFO', console=True)
+
 
 class DRobot(object):
     """
@@ -85,9 +91,16 @@ class DRobot(object):
         }
     }
 
-    def __init__(self, robot_url):
+    def __init__(self, robot_url, is_sign=False, token=None, secret=None):
         self.__is_url(robot_url)
         self.__robot_url = robot_url
+        if is_sign:
+            if token is None or secret is None:
+                raise RuntimeError("Sign mode is enable, please define token and secret")
+            self.__robot_url = 'https://oapi.dingtalk.com/robot/send'
+        self.__token = token
+        self.__secret = secret.encode('utf-8')
+        self.__is_sign = is_sign
 
     def __get_msgtype_struct(self, msgtype:str):
         if msgtype not in self.__get_all_msgtype():
@@ -97,9 +110,26 @@ class DRobot(object):
     def __get_all_msgtype(self):
         return self.__robot_api_struct.keys()
 
+    def __sign(self):
+        timestamp = str(round(time.time() * 1000))
+        string_to_sign = '{}\n{}'.format(timestamp, self.__secret).encode('utf-8')
+        hmac_code = hmac.new(self.__secret, string_to_sign, digestmod=hashlib.sha3_256).digest()
+        sign = urllib.parse.quote_plus(base64.b64encode(hmac_code))
+        return timestamp, sign
+
     def __post_data(self, data):
+        _url = self.__robot_url
         try:
-            ret = requests.post(self.__robot_url, json=data, timeout=30)
+            if self.__is_sign:
+                _timestamp, _sign = self.__sign()
+                _params = {
+                    'access_token': self.__token,
+                    'timestamp': _timestamp,
+                    'sign': _sign
+                }
+                ret = requests.post(_url, params=_params, json=data, timeout=30)
+            else:
+                ret = requests.post(_url, json=data, timeout=30)
         except Exception as e:
             log.error("send data failed, err: %s" % e)
             return None
@@ -111,16 +141,18 @@ class DRobot(object):
         return False
 
     @staticmethod
-    def __str_not_empty(tester:tuple):
+    def __str_not_empty(tester: tuple):
         for a in tester:
             if type(a) == str:
                 if len(a) == 0:
                     raise ValueError("Empty not allow")
 
     @staticmethod
-    def __is_url(url:str):
-        if url[0:7] == "http://": return
-        if url[0:8] == "https://": return
+    def __is_url(url: str):
+        if url[0:7] == "http://":
+            return
+        if url[0:8] == "https://":
+            return
         raise ValueError("Url must start with http:// or https://")
 
     def add_action_card_btns(self, btns:list, title:str, url:str):

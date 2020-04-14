@@ -200,3 +200,6 @@ tags
 
 # cfg file
 cfg.py
+cfg.json
+
+.vscode
