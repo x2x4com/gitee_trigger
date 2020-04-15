@@ -65,8 +65,20 @@ def alert():
     if not is_internal_ip(request.remote_addr) or token not in token_list:
         return abort(403, 'Not allow')
     data = request.json
-    # print(data)
-    ret = dingding_robot.send_text(json.dumps(data), msg_from='prometheus')
+    try:
+        summary = data['commonAnnotations']['summary']
+        description = data['commonAnnotations']['description']
+        if data['status'] == 'firing':
+            status = '故障'
+        elif data['status'] == 'resolved':
+            status = '恢复'
+        else:
+            status = data['status']
+        msg = "%s: %s, %s" % (status, summary, description)
+    except KeyError:
+        Log.error('key error, raw: %s' % data)
+        msg = "prometheus input data error, raw: %s" % data
+    ret = dingding_robot.send_text(msg, msg_from='prometheus')
     return Response(ret, content_type='application/json')
 
 
