@@ -66,15 +66,31 @@ def alert():
         return abort(403, 'Not allow')
     data = request.json
     try:
-        summary = data['commonAnnotations']['summary']
-        description = data['commonAnnotations']['description']
-        if data['status'] == 'firing':
-            status = '故障'
-        elif data['status'] == 'resolved':
-            status = '恢复'
-        else:
-            status = data['status']
-        msg = "%s: %s, %s" % (status, summary, description)
+        # summary = data['commonAnnotations']['summary']
+        # description = data['commonAnnotations']['description']
+        msg = ''
+        for _alert in data['alerts']:
+            _status = _alert['status']
+            _name = _alert['labels']['alertname']
+            _severity = _alert['labels']['severity']
+            _summary = _alert['annotations']['summary']
+            _desc = _alert['annotations']['description']
+            _start = _alert['startsAt']
+            if _status == 'resolved':
+                _end = _alert['endsAt']
+            else:
+                _end = 'NA'
+            _fp = _alert['fingerprint']
+            msg += "[{status}]-[{severity}]-[{fp}]: {name}\nstart:{start}, end:{end}\n{summary}, {desc}\n\n".format(
+                status=_status,
+                severity=_severity,
+                fp=_fp,
+                name=_name,
+                start=_start,
+                end=_end,
+                summary=_summary,
+                desc=_desc
+            )
     except KeyError:
         Log.error('key error, raw: %s' % data)
         msg = "prometheus input data error, raw: %s" % data
